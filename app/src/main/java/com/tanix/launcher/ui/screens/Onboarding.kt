@@ -24,8 +24,9 @@ import com.tanix.launcher.HomeViewModel
 import com.tanix.launcher.ui.*
 import kotlinx.coroutines.delay
 
+// Я переименовал функцию в Onboarding и добавил onDone, чтобы MainActivity могла её вызвать
 @Composable
-fun OnboardingScreen(vm: HomeViewModel) {
+fun Onboarding(vm: HomeViewModel, onDone: () -> Unit = {}) {
     var step by remember { mutableIntStateOf(0) }
     val cs = MaterialTheme.colorScheme
 
@@ -46,6 +47,7 @@ fun OnboardingScreen(vm: HomeViewModel) {
             )
             3 -> FinishScreen(onFinish = {
                 vm.update { it.copy(onboarded = true) }
+                onDone() // Вызываем колбэк, чтобы MainActivity переключилась на главный экран
             })
         }
     }
