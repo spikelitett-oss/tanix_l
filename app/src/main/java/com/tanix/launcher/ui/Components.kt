@@ -14,7 +14,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +26,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Outline
@@ -48,13 +51,48 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tanix.launcher.data.AppItem
+import kotlinx.coroutines.delay
 
-/** Общее состояние «скользящего контура»: один контур плавно переезжает с плитки на плитку. */
+/** Фикс долгого нажатия для ТВ-пультов (combinedClickable не всегда работает на D-pad) */
+fun Modifier.tvClickable(onClick: () -> Unit, onLongClick: (() -> Unit)? = null) = composed {
+    var isPressed by remember { mutableStateOf(false) }
+    var longPressFired by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isPressed) {
+        if (isPressed && onLongClick != null) {
+            longPressFired = false
+            delay(550L) // Время долгого нажатия
+            if (isPressed) {
+                longPressFired = true
+                onLongClick.invoke()
+            }
+        }
+    }
+    this.onKeyEvent { event ->
+        if (event.key == Key.DirectionCenter || event.key == Key.Enter || event.key == Key.NumPadEnter) {
+            when (event.type) {
+                KeyEventType.KeyDown -> {
+                    if (!isPressed) { isPressed = true; true } else false
+                }
+                KeyEventType.KeyUp -> {
+                    if (isPressed) {
+                        isPressed = false
+                        if (!longPressFired) onClick()
+                        true
+                    } else false
+                }
+                else -> false
+            }
+        } else false
+    }.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+        onClick()
+    }
+}
+
 class FocusRingHost {
     var rect by mutableStateOf<Rect?>(null)
     var radius by mutableFloatStateOf(0f)
@@ -67,7 +105,6 @@ class FocusRingHost {
 val LocalRingHost = staticCompositionLocalOf<FocusRingHost?> { null }
 
 class CoordsHolder { var c: LayoutCoordinates? = null }
-
 class RectHolder { var r: Rect = Rect.Zero }
 
 private fun ringAccent(st: LauncherSettings, base: Color?, cs: ColorScheme): Color = when (st.ringColor) {
@@ -78,7 +115,6 @@ private fun ringAccent(st: LauncherSettings, base: Color?, cs: ColorScheme): Col
     else -> base ?: cs.primary
 }
 
-/** Контур, который плавно скользит между плитками (режим «Плавный контур»). */
 @Composable
 fun FocusRingOverlay(host: FocusRingHost) {
     val st = LocalSettings.current
@@ -112,10 +148,6 @@ fun FocusRingOverlay(host: FocusRingHost) {
     }
 }
 
-/**
- * Фокусируемый контейнер. Эффекты (все настраиваются): пружинное увеличение, контур,
- * мягкое свечение вокруг и «блик»; режим «Плавный контур» — без увеличения, контур скользит между плитками.
- */
 @Composable
 fun FocusBox(
     modifier: Modifier = Modifier,
@@ -138,12 +170,14 @@ fun FocusBox(
     val token = remember { Any() }
     val coords = remember { CoordsHolder() }
     var f by remember { mutableStateOf(false) }
+    
+    // Expressive анимация с "пружинкой"
     val k = if (sliding) 0f else Look.at(Look.FocusK, st.focusK)
     val target = 1f + (focusScale - 1f) * k
-    val damping = if (st.expressive) 0.55f else 0.75f
-    val spec: AnimationSpec<Float> =
-        if (st.animOn) spring(dampingRatio = damping, stiffness = 420f / Look.at(Look.SpeedK, st.animSpeed)) else snap()
+    val damping = if (st.expressive) 0.5f else 0.75f
+    val spec: AnimationSpec<Float> = if (st.animOn) spring(dampingRatio = damping, stiffness = 400f / Look.at(Look.SpeedK, st.animSpeed)) else snap()
     val sc by animateFloatAsState(if (f) target else 1f, spec, label = "focusScale")
+    
     val glowA by animateFloatAsState(if (f && st.glow && !sliding) 1f else 0f, tween(animMs(220)), label = "glow")
     val shine = remember { Animatable(0f) }
     LaunchedEffect(f) {
@@ -152,6 +186,13 @@ fun FocusBox(
     val accent = ringAccent(st, ringColor, cs)
     val ring = f && st.focusStyle != 1 && !sliding
     val rw = Look.at(Look.RingW, st.ringWidth).dp
+
+    // Liquid Glass фон
+    val glassBg = if (st.liquidGlass) {
+        val glassColor = if (LocalDark.current) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.5f)
+        Modifier.background(Brush.verticalGradient(listOf(glassColor, glassColor.copy(alpha = glassColor.alpha * 0.2f))))
+            .border(1.dp, Color.White.copy(alpha = 0.2f), shape)
+    } else Modifier
 
     fun report() {
         val h = host ?: return
@@ -201,6 +242,7 @@ fun FocusBox(
                 }
             }
             .clip(shape)
+            .then(glassBg)
             .drawWithContent {
                 drawContent()
                 val p = shine.value
@@ -216,11 +258,10 @@ fun FocusBox(
                 }
             }
             .border(if (ring) rw else 0.dp, accent, shape)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .tvClickable(onClick = onClick, onLongClick = onLongClick)
     ) { content(f) }
 }
 
-/** Material 3 chip (filter chip): выбранный — secondaryContainer с галочкой. */
 @Composable
 fun Chip(text: String, selected: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -229,12 +270,11 @@ fun Chip(text: String, selected: Boolean = false, modifier: Modifier = Modifier,
         val fg = when { f -> cs.onPrimary; selected -> cs.onSecondaryContainer; else -> cs.onSurfaceVariant }
         Text(
             (if (selected) "✓ " else "") + text, color = fg, style = MaterialTheme.typography.labelLarge, maxLines = 1,
-            modifier = Modifier.background(bg).padding(horizontal = 16.dp, vertical = if (LocalSettings.current.expressive) 10.dp else 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = if (LocalSettings.current.expressive) 10.dp else 8.dp)
         )
     }
 }
 
-/** Пилюля вкладки (как «Для вас / Приложения» в Google TV). */
 @Composable
 fun TabPill(text: String, selected: Boolean, onFocus: () -> Unit, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -245,7 +285,7 @@ fun TabPill(text: String, selected: Boolean, onFocus: () -> Unit, onClick: () ->
         )
         val fg = when { f -> cs.onPrimary; selected -> cs.onSecondaryContainer; else -> cs.onSurfaceVariant }
         Text(text, color = fg, style = MaterialTheme.typography.labelLarge, maxLines = 1,
-            modifier = Modifier.background(bg).padding(horizontal = 18.dp, vertical = 9.dp))
+            modifier = Modifier.background(bg).padding(horizontal = 20.dp, vertical = 10.dp))
     }
 }
 
@@ -253,7 +293,7 @@ fun TabPill(text: String, selected: Boolean, onFocus: () -> Unit, onClick: () ->
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     Text(title, color = cs.primary, style = MaterialTheme.typography.labelLarge,
-        modifier = Modifier.padding(start = 16.dp, top = 18.dp, bottom = 8.dp))
+        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)) // Отступ сверху увеличен
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(cs.surfaceContainer).padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -318,7 +358,6 @@ fun AccentPicker(hue: Float, onPick: (Float) -> Unit) {
     }
 }
 
-/** Значок «ТВ», нарисованный кодом. */
 @Composable
 fun TvIcon(tint: Color, modifier: Modifier = Modifier.size(22.dp)) {
     Canvas(modifier) {
@@ -332,14 +371,14 @@ fun TvIcon(tint: Color, modifier: Modifier = Modifier.size(22.dp)) {
     }
 }
 
-/** Значок приложения в оригинальных цветах. В круглой плитке значок чуть крупнее. */
+/** Иконка приложения. В круглой плитке — белый фон и иконка по центру (точь-в-точь как в Google TV) */
 @Composable
 fun AppIcon(app: AppItem, size: Dp, shape: Shape = iconShapeOf(0)) {
     val circle = shape === CircleShape
-    Box(Modifier.size(size).clip(shape).background(NeutralTile), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(size).clip(shape).background(if (circle) Color.White else NeutralTile), contentAlignment = Alignment.Center) {
         app.icon?.let {
-            if (app.adaptive) Image(it, app.label, Modifier.fillMaxSize().scale(if (circle) 1.62f else 1.5f))
-            else Image(it, app.label, Modifier.fillMaxSize().padding(size * (if (circle) 0.09f else 0.18f)))
+            if (app.adaptive) Image(it, app.label, Modifier.fillMaxSize().scale(if (circle) 1.2f else 1.5f))
+            else Image(it, app.label, Modifier.fillMaxSize().padding(size * (if (circle) 0.22f else 0.18f)))
         }
     }
 }

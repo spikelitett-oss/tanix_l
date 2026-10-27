@@ -3,6 +3,9 @@ package com.tanix.launcher.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,11 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -28,10 +27,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tanix.launcher.HomeViewModel
 import com.tanix.launcher.data.AppItem
 import kotlinx.coroutines.delay
 
-/** Цвет выделения плиток: белый на тёмной теме (как в Google TV), акцентный на светлой. */
 @Composable
 fun tileRing(): Color = if (LocalDark.current) Color.White else MaterialTheme.colorScheme.primary
 
@@ -51,10 +50,6 @@ private fun tileSize(tileStyle: Int, iconSize: Int): Pair<Dp, Dp> {
     }
 }
 
-/**
- * Плитка приложения. По умолчанию — баннер 16:9 в оригинальных цветах приложения (как в Google TV),
- * подпись показывается под плиткой при фокусе. onClick получает границы плитки (для анимации «на весь экран»).
- */
 @Composable
 fun AppTile(
     app: AppItem,
@@ -82,10 +77,10 @@ fun AppTile(
             onFocusChange = { focused = it },
             onKey = onKey, ringColor = if (moving) cs.tertiary else tileRing(), focusRequester = fr
         ) {
-            Box(Modifier.width(w).height(h).background(NeutralTile).onGloballyPositioned { holder.r = it.boundsInRoot() }) {
+            Box(Modifier.width(w).height(h).onGloballyPositioned { holder.r = it.boundsInRoot() }) {
                 when {
                     banner && app.banner != null ->
-                        Image(app.banner, app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        Image(app.banner, app.label, Modifier.fillMaxSize().clip(shape), contentScale = ContentScale.Crop)
                     banner -> Row(
                         Modifier.align(Alignment.Center).padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -114,7 +109,6 @@ fun AppTile(
     }
 }
 
-/** Плитка «+ Добавить» в конце ряда «Ваши приложения». */
 @Composable
 fun AddTile(onClick: () -> Unit) {
     val st = LocalSettings.current
@@ -131,7 +125,6 @@ fun AddTile(onClick: () -> Unit) {
     }
 }
 
-/** Обработчик стрелок для режима перемещения: onMove получает смещение (-1, +1, ±колонок). */
 fun moveKeyHandler(cols: Int, onMove: (Int) -> Unit): (KeyEvent) -> Boolean = { e ->
     if (e.type == KeyEventType.KeyDown) {
         when (e.key) {
@@ -144,7 +137,6 @@ fun moveKeyHandler(cols: Int, onMove: (Int) -> Unit): (KeyEvent) -> Boolean = { 
     } else false
 }
 
-/** Горизонтальная карточка «Продолжить просмотр» (16:9) — приложение, баннер и время последнего открытия. */
 @Composable
 fun WatchCard(
     app: AppItem,
@@ -183,7 +175,6 @@ fun WatchCard(
     }
 }
 
-/** Карточка «Выбрать приложения» в конце ряда «Продолжить просмотр». */
 @Composable
 fun WatchAddCard(onClick: () -> Unit) {
     val st = LocalSettings.current
@@ -200,6 +191,36 @@ fun WatchAddCard(onClick: () -> Unit) {
                 tr("Выбрать приложения", "Choose apps"), color = cs.onSurfaceVariant,
                 style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+/** Ряд классических каналов (YouTube, Lampa и т.д.) вместо огромного баннера */
+@Composable
+fun ChannelsRow(vm: HomeViewModel) {
+    val channels = listOf("YouTube", "Lampa", "Twitch", "Netflix") // Заглушка, можно подтянуть из установленных
+    Column(Modifier.fillMaxWidth()) {
+        Text(
+            tr("Популярные каналы", "Popular channels"),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(start = 8.dp, bottom = 12.dp)
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(horizontal = 8.dp)) {
+            items(channels) { name ->
+                FocusBox(Modifier, CircleShape, 1.15f, onClick = { /* open app */ }) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            Modifier.size(72.dp).clip(CircleShape).background(Color(0xFF333333)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(name.first().toString(), color = Color.White, style = MaterialTheme.typography.headlineMedium)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(name, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
         }
     }
 }
