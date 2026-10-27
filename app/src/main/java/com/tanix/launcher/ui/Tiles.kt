@@ -3,9 +3,6 @@ package com.tanix.launcher.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,11 +20,12 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tanix.launcher.HomeViewModel
+import com.tanix.launcher.R
 import com.tanix.launcher.data.AppItem
 import kotlinx.coroutines.delay
 
@@ -97,12 +95,17 @@ fun AppTile(
                 }
             }
         }
+        Spacer(Modifier.height(4.dp))
         val showLabel = when (st.labelMode) { 0 -> true; 1 -> focused || moving; else -> false }
-        Box(Modifier.height(22.dp).padding(top = 4.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.height(18.dp), contentAlignment = Alignment.Center) {
             if (showLabel) {
                 Text(
-                    app.label, color = if (moving) cs.tertiary else cs.onSurface, style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center
+                    app.label, 
+                    color = if (moving) cs.tertiary else cs.onSurface, 
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1, 
+                    overflow = TextOverflow.Ellipsis, 
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -195,32 +198,36 @@ fun WatchAddCard(onClick: () -> Unit) {
     }
 }
 
-/** Ряд классических каналов (YouTube, Lampa и т.д.) вместо огромного баннера */
 @Composable
-fun ChannelsRow(vm: HomeViewModel) {
-    val channels = listOf("YouTube", "Lampa", "Twitch", "Netflix") // Заглушка, можно подтянуть из установленных
-    Column(Modifier.fillMaxWidth()) {
-        Text(
-            tr("Популярные каналы", "Popular channels"),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 8.dp, bottom = 12.dp)
+fun AdBanner() {
+    val cs = MaterialTheme.colorScheme
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(260.dp)
+            .clip(RoundedCornerShape(24.dp))
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ad_banner),
+            contentDescription = "Advertisement",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(horizontal = 8.dp)) {
-            items(channels) { name ->
-                FocusBox(Modifier, CircleShape, 1.15f, onClick = { /* open app */ }) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(
-                            Modifier.size(72.dp).clip(CircleShape).background(Color(0xFF333333)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(name.first().toString(), color = Color.White, style = MaterialTheme.typography.headlineMedium)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Text(name, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-            }
-        }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Transparent,
+                            cs.background.copy(alpha = 0.5f),
+                            cs.background
+                        ),
+                        startY = 0f,
+                        endY = 1200f
+                    )
+                )
+        )
     }
 }
