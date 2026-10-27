@@ -11,6 +11,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -101,7 +102,6 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
             Column(Modifier.fillMaxSize().padding(horizontal = pad, vertical = vpad)) {
                 TopBar(vm, tab, onTab = { tab = it }, openSettings = openSettings, onPick = { showPicker = true })
                 
-                // Увеличенный отступ под вкладками
                 Spacer(Modifier.height(24.dp)) 
 
                 AnimatedContent(
@@ -116,11 +116,9 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                 ) { t ->
                     when (t) {
                         0 -> Column(Modifier.fillMaxSize()) {
-                            // Вместо огромного баннера - каналы
                             ChannelsRow(vm)
                             Spacer(Modifier.height(24.dp))
                             
-                            // Остальной контент вкладки "Для вас"
                             ForYouPage(
                                 vm, home, visible, watch, moving,
                                 onMenu = { menuApp = it }, onDone = { moving = null },
@@ -305,7 +303,7 @@ private fun TopBar(vm: HomeViewModel, tab: Int, onTab: (Int) -> Unit, openSettin
             ) {
                 tabs.forEachIndexed { i, name ->
                     TabPill(name, tab == i, onFocus = { if (s.tabOnFocus) onTab(i) }, onClick = { onTab(i) })
-                    if (i < tabs.lastIndex) Spacer(Modifier.width(16.dp)) // Увеличенное расстояние между вкладками
+                    if (i < tabs.lastIndex) Spacer(Modifier.width(16.dp)) 
                 }
             }
         }

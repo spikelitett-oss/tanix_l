@@ -225,7 +225,7 @@ private fun WatchPane(vm: HomeViewModel) {
             tr("Размер карточек", "Card size"),
             listOf(tr("Малые", "Small"), tr("Средние", "Medium"), tr("Большие", "Large")), s.posterSize
         ) { v -> vm.update { it.copy(posterSize = v) } }
-        SwitchRow(tr("Подпись «Продолжить просмотр» над названием", "“Continue watching” label above the title"), null, s.posterBadge) { v -> vm.update { it.copy(posterBadge = v) } }
+        SwitchRow(tr("Подпись продолжения над названием", "Continue watching label above the title"), null, s.posterBadge) { v -> vm.update { it.copy(posterBadge = v) } }
         SwitchRow(tr("Время последнего запуска в большом блоке", "Last-opened time in the big block"), null, s.posterDesc) { v -> vm.update { it.copy(posterDesc = v) } }
         SettingRow(tr("Очистить историю запусков", "Clear launch history"), null, onClick = { vm.clearOpened() })
     }
@@ -358,4 +358,4 @@ private fun SystemPane(vm: HomeViewModel) {
         )
     }
     SettingsSection(tr("Главный экран", "Home screen")) {
-        SettingRow(tr("Сделать Tanix главным экраном", "Make Tanix the home screen"), tr("Откроются системные настройки главного эк
+        SettingRow(tr("Сделать Tanix главным экраном", "Make Tanix the home screen"), tr("Откроются системные настройки главного экрана", "Open
