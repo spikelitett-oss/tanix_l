@@ -134,7 +134,7 @@ private fun AppearancePane(vm: HomeViewModel) {
         ) { v -> vm.update { it.copy(cornerStyle = v) } }
         SwitchRow(
             tr("Поля экрана", "Screen margins"),
-            tr("Включите, если телевизор обрезает края; выключено — на весь экран", "Turn on if your TV crops the edges; off — edge to edge"),
+            tr("Включите, если телевизор обрезает края; выключено - на весь экран", "Turn on if your TV crops the edges; off - edge to edge"),
             s.safeArea
         ) { v -> vm.update { it.copy(safeArea = v) } }
         if (s.safeArea) {
@@ -162,29 +162,29 @@ private fun HomePane(vm: HomeViewModel) {
     SettingsSection(tr("Шапка", "Top bar")) {
         SwitchRow(tr("Логотип Tanix", "Tanix logo"), null, s.showLogo) { v -> vm.update { it.copy(showLogo = v) } }
         OptionRow(tr("Прозрачность логотипа", "Logo opacity"), listOf("35%", "55%", "75%", "100%"), s.logoAlpha) { v -> vm.update { it.copy(logoAlpha = v) } }
-        SwitchRow(tr("Вкладки «Для вас / Приложения / Магазин»", "Tabs: For you / Apps / Store"), null, s.showTabs) { v -> vm.update { it.copy(showTabs = v) } }
+        SwitchRow(tr("Вкладки (Для вас / Приложения / Магазин)", "Tabs: For you / Apps / Store"), null, s.showTabs) { v -> vm.update { it.copy(showTabs = v) } }
         SwitchRow(
             tr("Переключать вкладки при наведении", "Switch tabs on focus"),
-            tr("Как в Google TV; иначе — по нажатию OK", "Like Google TV; otherwise on OK"), s.tabOnFocus
+            tr("Как в Google TV; иначе - по нажатию OK", "Like Google TV; otherwise on OK"), s.tabOnFocus
         ) { v -> vm.update { it.copy(tabOnFocus = v) } }
     }
-    SettingsSection(tr("Что показывать на вкладке «Для вас»", "What to show on the For you tab")) {
+    SettingsSection(tr("Что показывать на вкладке Для вас", "What to show on the For you tab")) {
         SwitchRow(tr("Продолжить просмотр", "Continue watching"), null, s.showWatch) { v -> vm.update { it.copy(showWatch = v) } }
-        SwitchRow(tr("Ряд «Ваши приложения»", "Your apps row"), null, s.showAppsRow) { v -> vm.update { it.copy(showAppsRow = v) } }
+        SwitchRow(tr("Ряд Ваши приложения", "Your apps row"), null, s.showAppsRow) { v -> vm.update { it.copy(showAppsRow = v) } }
         SwitchRow(
-            tr("Ряд «Избранное»", "Favorites row"),
-            tr("Долгое нажатие OK на приложении → «В избранное»", "Long press OK on an app → Add to favorites"), s.showFavRow
+            tr("Ряд Избранное", "Favorites row"),
+            tr("Долгое нажатие OK на приложении - В избранное", "Long press OK on an app - Add to favorites"), s.showFavRow
         ) { v -> vm.update { it.copy(showFavRow = v) } }
-        SwitchRow(tr("Ряд «Недавние»", "Recent row"), null, s.showRecentRow) { v -> vm.update { it.copy(showRecentRow = v) } }
+        SwitchRow(tr("Ряд Недавние", "Recent row"), null, s.showRecentRow) { v -> vm.update { it.copy(showRecentRow = v) } }
     }
     SettingsSection(tr("Порядок рядов", "Row order")) {
         s.rowOrder.forEachIndexed { i, rk ->
             key(rk) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(rowTitle(rk, ru), color = cs.onSurface, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                    Chip("▲") { vm.moveRow(i, -1) }
+                    Chip("^") { vm.moveRow(i, -1) }
                     Spacer(Modifier.width(8.dp))
-                    Chip("▼") { vm.moveRow(i, 1) }
+                    Chip("v") { vm.moveRow(i, 1) }
                 }
             }
         }
@@ -203,7 +203,7 @@ private fun IconsPane(vm: HomeViewModel) {
     SettingsSection(tr("Плитки приложений", "App tiles")) { IconsBlock(vm) }
     SettingsSection(tr("Порядок", "Order")) {
         OptionRow(
-            tr("Сортировка (вкладка «Приложения»)", "Sorting (Apps tab)"),
+            tr("Сортировка (вкладка Приложения)", "Sorting (Apps tab)"),
             listOf(tr("По алфавиту", "Alphabetical"), tr("Свой порядок", "Custom"), tr("Недавние сверху", "Recent first")), s.sortMode
         ) { v -> vm.update { it.copy(sortMode = v) } }
         SettingRow(tr("Сбросить порядок", "Reset order"), tr("Вернуть сортировку по алфавиту", "Back to alphabetical"), onClick = { vm.resetOrder() })
@@ -215,10 +215,10 @@ private fun WatchPane(vm: HomeViewModel) {
     val s = vm.s
     var showApps by remember { mutableStateOf(false) }
     SettingsSection(tr("Продолжить просмотр", "Continue watching")) {
-        SwitchRow(tr("Показывать «Продолжить просмотр»", "Show Continue watching"), null, s.showWatch) { v -> vm.update { it.copy(showWatch = v) } }
+        SwitchRow(tr("Показывать Продолжить просмотр", "Show Continue watching"), null, s.showWatch) { v -> vm.update { it.copy(showWatch = v) } }
         SettingRow(
-            tr("Приложения для «Продолжить просмотр»", "Apps for Continue watching"),
-            tr("Выбрано: ", "Chosen: ") + s.cwApps.size + tr(" · недавно открытые — первыми", " · recently opened first"),
+            tr("Приложения для Продолжить просмотр", "Apps for Continue watching"),
+            tr("Выбрано: ", "Chosen: ") + s.cwApps.size + tr(" (недавно открытые - первыми)", " (recently opened first)"),
             onClick = { showApps = true }
         )
         OptionRow(
@@ -256,7 +256,7 @@ private fun AnimationsPane(vm: HomeViewModel) {
         SwitchRow(tr("Появление рядов каскадом", "Cascading rows"), null, s.enterAnim) { v -> vm.update { it.copy(enterAnim = v) } }
         SwitchRow(
             tr("Приложение раскрывается на весь экран", "App expands to full screen"),
-            tr("При запуске плитка растёт на весь экран, при закрытии — сворачивается обратно", "The tile grows to full screen on launch and shrinks back when closed"),
+            tr("При запуске плитка растёт на весь экран, при закрытии - сворачивается обратно", "The tile grows to full screen on launch and shrinks back when closed"),
             s.launchAnim
         ) { v -> vm.update { it.copy(launchAnim = v) } }
     }
@@ -293,7 +293,7 @@ private fun WeatherTimePane(vm: HomeViewModel) {
     SettingsSection(tr("Погода (Open-Meteo)", "Weather (Open-Meteo)")) {
         SwitchRow(tr("Показывать погоду", "Show weather"), null, s.showWeather) { v -> vm.update { it.copy(showWeather = v) } }
         WeatherBlock(vm)
-        SwitchRow(tr("Описание (ясно, дождь…)", "Description (clear, rain…)"), null, s.weatherDesc) { v -> vm.update { it.copy(weatherDesc = v) } }
+        SwitchRow(tr("Описание (ясно, дождь)", "Description (clear, rain)"), null, s.weatherDesc) { v -> vm.update { it.copy(weatherDesc = v) } }
         SwitchRow(tr("Ощущаемая температура", "Feels-like temperature"), null, s.weatherFeels) { v -> vm.update { it.copy(weatherFeels = v) } }
     }
     SettingsSection(tr("Время", "Time")) {
@@ -316,7 +316,7 @@ private fun AppsPane(vm: HomeViewModel) {
             tr("Сейчас: ", "Now: ") + vm.homeAppList.size + tr(" (рекомендуем около 15)", " (about 15 recommended)"),
             onClick = { showHome = true }
         )
-        SettingRow(tr("Порядок приложений", "App order"), tr("Переставить значки кнопками ▲ ▼", "Reorder icons with ▲ ▼"), onClick = { showReorder = true })
+        SettingRow(tr("Порядок приложений", "App order"), tr("Переставить значки кнопками вверх/вниз", "Reorder icons up/down"), onClick = { showReorder = true })
         SettingRow(tr("Сбросить к автоматическому списку", "Reset to the automatic list"), tr("Первые 15 приложений", "First 15 apps"), onClick = {
             vm.update { it.copy(homeConfigured = false, homeApps = emptyList()) }
         })
@@ -324,7 +324,7 @@ private fun AppsPane(vm: HomeViewModel) {
     SettingsSection(tr("Кнопка ТВ", "TV button")) {
         SettingRow(
             tr("Приложение для кнопки ТВ", "App for the TV button"),
-            vm.apps.firstOrNull { it.pkg == s.tvPkg }?.label ?: tr("Не выбрано (Lampa, ILTV…)", "Not set (Lampa, ILTV…)"),
+            vm.apps.firstOrNull { it.pkg == s.tvPkg }?.label ?: tr("Не выбрано (Lampa, ILTV)", "Not set (Lampa, ILTV)"),
             onClick = { showTv = true }
         )
     }
@@ -358,4 +358,49 @@ private fun SystemPane(vm: HomeViewModel) {
         )
     }
     SettingsSection(tr("Главный экран", "Home screen")) {
-        SettingRow(tr("Сделать Tanix главным экраном", "Make Tanix the home screen"), tr("Откроются системные настройки главного экрана", "Open
+        SettingRow(tr("Сделать Tanix главным экраном", "Make Tanix the home screen"), tr("Откроются системные настройки главного экрана", "Opens the system home screen settings"), onClick = { openHomeSettings(ctx) })
+        SettingRow(tr("Пройти первоначальную настройку заново", "Run the first-time setup again"), null, onClick = { vm.update { it.copy(onboarded = false) } })
+        SettingRow(
+            tr("Сбросить оформление", "Reset appearance"),
+            tr("Язык, город, избранное и скрытые приложения сохранятся", "Language, city, favorites and hidden apps are kept"),
+            onClick = { confirmReset = true }
+        )
+    }
+    if (confirmReset) {
+        ConfirmDialog(
+            tr("Сбросить оформление?", "Reset appearance?"),
+            tr("Все параметры внешнего вида вернутся к значениям по умолчанию.", "All look settings return to their defaults."),
+            tr("Сбросить", "Reset"),
+            onConfirm = { vm.resetAppearance(); confirmReset = false }, onDismiss = { confirmReset = false }
+        )
+    }
+}
+
+@Composable
+private fun AboutPane(vm: HomeViewModel) {
+    var taps by remember { mutableIntStateOf(0) }
+    var lastTap by remember { mutableLongStateOf(0L) }
+    var showLogo by remember { mutableStateOf(false) }
+    var showGame by remember { mutableStateOf(false) }
+    SettingsSection(tr("О лаунчере", "About")) {
+        SettingRow(
+            tr("Информация о лаунчере", "Launcher information"),
+            "Tanix Launcher 1.0",
+            onClick = {
+                val now = System.currentTimeMillis()
+                taps = if (now - lastTap > 3000L) 1 else taps + 1
+                lastTap = now
+                if (taps >= 7) { taps = 0; showLogo = true }
+            },
+            onLongClick = { showGame = true }
+        )
+        SettingRow(
+            tr("Разработан исключительно для приставок Tanix", "Made exclusively for Tanix set-top boxes"),
+            tr("Легкий, быстрый и без лишних сервисов", "Light, fast and without extra services"),
+            onClick = {}
+        )
+        SettingRow("Version", "1.0", onClick = {})
+    }
+    if (showLogo) LogoEgg(onDismiss = { showLogo = false }, onPlay = { showLogo = false; showGame = true })
+    if (showGame) SnakeGame { showGame = false }
+}
