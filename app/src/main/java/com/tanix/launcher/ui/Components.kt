@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import com.tanix.launcher.data.AppItem
 import kotlinx.coroutines.delay
 
-/** Фикс долгого нажатия для ТВ-пультов (combinedClickable не всегда работает на D-pad) */
 fun Modifier.tvClickable(onClick: () -> Unit, onLongClick: (() -> Unit)? = null) = composed {
     var isPressed by remember { mutableStateOf(false) }
     var longPressFired by remember { mutableStateOf(false) }
@@ -65,7 +64,7 @@ fun Modifier.tvClickable(onClick: () -> Unit, onLongClick: (() -> Unit)? = null)
     LaunchedEffect(isPressed) {
         if (isPressed && onLongClick != null) {
             longPressFired = false
-            delay(550L) // Время долгого нажатия
+            delay(550L)
             if (isPressed) {
                 longPressFired = true
                 onLongClick.invoke()
@@ -107,45 +106,9 @@ val LocalRingHost = staticCompositionLocalOf<FocusRingHost?> { null }
 class CoordsHolder { var c: LayoutCoordinates? = null }
 class RectHolder { var r: Rect = Rect.Zero }
 
-private fun ringAccent(st: LauncherSettings, base: Color?, cs: ColorScheme): Color = when (st.ringColor) {
-    1 -> Color.White
-    2 -> cs.primary
-    3 -> cs.tertiary
-    4 -> Color(0xFFFFC107)
-    else -> base ?: cs.primary
-}
-
 @Composable
 fun FocusRingOverlay(host: FocusRingHost) {
-    val st = LocalSettings.current
-    val anim = remember { Animatable(Rect.Zero, Rect.VectorConverter) }
-    val r = host.rect
-    LaunchedEffect(r) {
-        if (r != null) {
-            if (!st.animOn || anim.value == Rect.Zero) anim.snapTo(r)
-            else anim.animateTo(r, spring(dampingRatio = 0.85f, stiffness = 420f / Look.at(Look.SpeedK, st.animSpeed)))
-        }
-    }
-    val alpha by animateFloatAsState(if (host.active && r != null) 1f else 0f, tween(animMs(160)), label = "ringAlpha")
-    Canvas(Modifier.fillMaxSize()) {
-        if (alpha > 0.01f) {
-            val rc = anim.value
-            val gap = 3.dp.toPx()
-            val tl = Offset(rc.left - gap, rc.top - gap)
-            val sz = Size(rc.width + gap * 2, rc.height + gap * 2)
-            val rad = host.radius + gap
-            if (st.glow) {
-                for (i in 1..3) {
-                    val g = i * 5.dp.toPx()
-                    drawRoundRect(
-                        host.color.copy(alpha = 0.16f * alpha / i),
-                        Offset(tl.x - g, tl.y - g), Size(sz.width + 2 * g, sz.height + 2 * g), CornerRadius(rad + g)
-                    )
-                }
-            }
-            drawRoundRect(host.color.copy(alpha = alpha), tl, sz, CornerRadius(rad), style = Stroke(host.widthPx))
-        }
-    }
+    // Отключено для Material You 3 Expressive
 }
 
 @Composable
@@ -163,101 +126,33 @@ fun FocusBox(
 ) {
     val st = LocalSettings.current
     val cs = MaterialTheme.colorScheme
-    val host = LocalRingHost.current
-    val sliding = st.focusStyle == 3 && host != null
-    val density = LocalDensity.current
-    val dir = LocalLayoutDirection.current
-    val token = remember { Any() }
-    val coords = remember { CoordsHolder() }
     var f by remember { mutableStateOf(false) }
     
-    // Expressive анимация с "пружинкой"
-    val k = if (sliding) 0f else Look.at(Look.FocusK, st.focusK)
-    val target = 1f + (focusScale - 1f) * k
+    val target = 1f + (focusScale - 1f) * Look.at(Look.FocusK, st.focusK)
     val damping = if (st.expressive) 0.5f else 0.75f
     val spec: AnimationSpec<Float> = if (st.animOn) spring(dampingRatio = damping, stiffness = 400f / Look.at(Look.SpeedK, st.animSpeed)) else snap()
     val sc by animateFloatAsState(if (f) target else 1f, spec, label = "focusScale")
     
-    val glowA by animateFloatAsState(if (f && st.glow && !sliding) 1f else 0f, tween(animMs(220)), label = "glow")
-    val shine = remember { Animatable(0f) }
-    LaunchedEffect(f) {
-        if (f && st.shine && st.animOn) { shine.snapTo(0f); shine.animateTo(1f, tween(650)) } else shine.snapTo(0f)
-    }
-    val accent = ringAccent(st, ringColor, cs)
-    val ring = f && st.focusStyle != 1 && !sliding
-    val rw = Look.at(Look.RingW, st.ringWidth).dp
-
-    // Liquid Glass фон
-    val glassBg = if (st.liquidGlass) {
-        val glassColor = if (LocalDark.current) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.5f)
-        Modifier.background(Brush.verticalGradient(listOf(glassColor, glassColor.copy(alpha = glassColor.alpha * 0.2f))))
-            .border(1.dp, Color.White.copy(alpha = 0.2f), shape)
-    } else Modifier
-
-    fun report() {
-        val h = host ?: return
-        val c = coords.c ?: return
-        if (!c.isAttached) return
-        val sz = c.size
-        val outline = shape.createOutline(Size(sz.width.toFloat(), sz.height.toFloat()), dir, density)
-        h.radius = when (outline) {
-            is Outline.Rounded -> outline.roundRect.topLeftCornerRadius.x
-            is Outline.Rectangle -> 0f
-            else -> 12f * density.density
-        }
-        h.color = accent
-        h.widthPx = rw.value * density.density
-        h.rect = c.boundsInRoot()
-    }
+    // Material You 3 Expressive: заливка фона при фокусе
+    val bg by animateColorAsState(
+        when {
+            f -> cs.primary
+            else -> Color.Transparent
+        },
+        animationSpec = tween(animMs(200)), label = "m3_bg"
+    )
 
     Box(
         modifier
             .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .scale(sc)
-            .onGloballyPositioned { c ->
-                coords.c = c
-                if (sliding && f) report()
-            }
             .onFocusChanged {
                 f = it.isFocused
                 onFocusChange?.invoke(it.isFocused)
-                if (sliding && host != null) {
-                    if (it.isFocused) { host.owner = token; host.active = true; report() }
-                    else if (host.owner === token) { host.active = false }
-                }
             }
             .onKeyEvent { e -> onKey?.invoke(e) ?: false }
-            .drawBehind {
-                if (glowA > 0.01f) {
-                    val base = if (shape === CircleShape) size.minDimension / 2f else 14.dp.toPx()
-                    for (i in 1..3) {
-                        val g = i * 5.dp.toPx()
-                        drawRoundRect(
-                            color = accent.copy(alpha = 0.16f * glowA / i),
-                            topLeft = Offset(-g, -g),
-                            size = Size(size.width + 2 * g, size.height + 2 * g),
-                            cornerRadius = CornerRadius(base + g)
-                        )
-                    }
-                }
-            }
             .clip(shape)
-            .then(glassBg)
-            .drawWithContent {
-                drawContent()
-                val p = shine.value
-                if (p > 0f && p < 1f) {
-                    val x = size.width * (-0.3f + 1.6f * p)
-                    drawRect(
-                        Brush.linearGradient(
-                            listOf(Color.Transparent, Color.White.copy(alpha = 0.30f), Color.Transparent),
-                            start = Offset(x - size.width * 0.15f, 0f),
-                            end = Offset(x + size.width * 0.15f, size.height)
-                        )
-                    )
-                }
-            }
-            .border(if (ring) rw else 0.dp, accent, shape)
+            .background(bg)
             .tvClickable(onClick = onClick, onLongClick = onLongClick)
     ) { content(f) }
 }
@@ -293,7 +188,7 @@ fun TabPill(text: String, selected: Boolean, onFocus: () -> Unit, onClick: () ->
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     Text(title, color = cs.primary, style = MaterialTheme.typography.labelLarge,
-        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)) // Отступ сверху увеличен
+        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp))
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(cs.surfaceContainer).padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -371,7 +266,6 @@ fun TvIcon(tint: Color, modifier: Modifier = Modifier.size(22.dp)) {
     }
 }
 
-/** Иконка приложения. В круглой плитке — белый фон и иконка по центру (точь-в-точь как в Google TV) */
 @Composable
 fun AppIcon(app: AppItem, size: Dp, shape: Shape = iconShapeOf(0)) {
     val circle = shape === CircleShape
