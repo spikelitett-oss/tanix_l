@@ -1,7 +1,7 @@
 @file:OptIn(ExperimentalFoundationApi::class)
 
 package com.tanix.launcher.ui.screens
-import androidx.compose.animation.core.animateFloat
+
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -100,9 +100,10 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
 
             Column(Modifier.fillMaxSize().padding(horizontal = pad, vertical = vpad)) {
                 TopBar(vm, tab, onTab = { tab = it }, openSettings = openSettings, onPick = { showPicker = true })
-                Spacer(Modifier.height(10.dp))
+                
+                // Увеличенный отступ под вкладками
+                Spacer(Modifier.height(24.dp)) 
 
-                // Переключение вкладок: сдвиг + проявление в сторону движения (как в Google TV)
                 AnimatedContent(
                     targetState = tab,
                     modifier = Modifier.weight(1f),
@@ -114,16 +115,23 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                     label = "tabs"
                 ) { t ->
                     when (t) {
-                        0 -> ForYouPage(
-                            vm, home, visible, watch, moving,
-                            onMenu = { menuApp = it }, onDone = { moving = null },
-                            onBg = { bgApp = it },
-                            onLaunch = launchApp,
-                            onAddApps = { showHomeApps = true },
-                            onPickWatch = { showWatchApps = true },
-                            onChannels = { showChannels = true },
-                            onReorder = { showReorder = true }
-                        )
+                        0 -> Column(Modifier.fillMaxSize()) {
+                            // Вместо огромного баннера - каналы
+                            ChannelsRow(vm)
+                            Spacer(Modifier.height(24.dp))
+                            
+                            // Остальной контент вкладки "Для вас"
+                            ForYouPage(
+                                vm, home, visible, watch, moving,
+                                onMenu = { menuApp = it }, onDone = { moving = null },
+                                onBg = { bgApp = it },
+                                onLaunch = launchApp,
+                                onAddApps = { showHomeApps = true },
+                                onPickWatch = { showWatchApps = true },
+                                onChannels = { showChannels = true },
+                                onReorder = { showReorder = true }
+                            )
+                        }
                         1 -> AppsGridPage(
                             vm, visible, tr("Нет приложений", "No apps"), moving,
                             onMenu = { menuApp = it }, onDone = { moving = null }, onLaunch = launchApp
@@ -179,7 +187,6 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
     if (showReorder) ReorderAppsDialog(vm) { showReorder = false }
 }
 
-/** Приложение «раскрывается» из плитки на весь экран; при закрытии приложения — сворачивается обратно в плитку. */
 @Composable
 private fun LaunchOverlay(vm: HomeViewModel, la: LaunchAnim) {
     val prog = remember { Animatable(if (la.launched) 1f else 0f) }
@@ -224,7 +231,6 @@ private fun LaunchOverlay(vm: HomeViewModel, la: LaunchAnim) {
     }
 }
 
-/** Медленный наезд фона (эффект Кена Бернса). */
 @Composable
 private fun KenBurns(enabled: Boolean, content: @Composable () -> Unit) {
     if (!enabled) { Box(Modifier.fillMaxSize().graphicsLayer { scaleX = 1.12f; scaleY = 1.12f }) { content() }; return }
@@ -237,7 +243,6 @@ private fun KenBurns(enabled: Boolean, content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().graphicsLayer { scaleX = k; scaleY = k }) { content() }
 }
 
-/** Фон: градиент, однотонный или размытый кадр выбранной карточки «Продолжить просмотр» (как в Google TV). */
 @Composable
 private fun HomeBackground(app: AppItem?) {
     val s = LocalSettings.current
@@ -257,7 +262,6 @@ private fun HomeBackground(app: AppItem?) {
                     val bmp = a?.banner ?: a?.icon
                     if (bmp != null) {
                         KenBurns(s.kenBurns && s.animOn) {
-                            // blur работает на Android 12+; на старых версиях картинка и так мягкая (увеличенный маленький баннер)
                             val m = if (Build.VERSION.SDK_INT >= 31) Modifier.fillMaxSize().blur(26.dp) else Modifier.fillMaxSize()
                             Image(bmp, null, m, contentScale = ContentScale.Crop, filterQuality = FilterQuality.Low)
                         }
@@ -283,7 +287,7 @@ private fun TopBar(vm: HomeViewModel, tab: Int, onTab: (Int) -> Unit, openSettin
     val cs = MaterialTheme.colorScheme
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) { while (true) { now = Date(); delay(15_000) } }
-    val tabs = listOf(tr("Для вас", "For you"), tr("Приложения", "Apps"), tr("Магазин приложений", "App store"))
+    val tabs = listOf(tr("Для вас", "For you"), tr("Приложения", "Apps"), tr("Магазин", "Store"))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (s.showLogo) {
@@ -301,7 +305,7 @@ private fun TopBar(vm: HomeViewModel, tab: Int, onTab: (Int) -> Unit, openSettin
             ) {
                 tabs.forEachIndexed { i, name ->
                     TabPill(name, tab == i, onFocus = { if (s.tabOnFocus) onTab(i) }, onClick = { onTab(i) })
-                    if (i < tabs.lastIndex) Spacer(Modifier.width(10.dp))
+                    if (i < tabs.lastIndex) Spacer(Modifier.width(16.dp)) // Увеличенное расстояние между вкладками
                 }
             }
         }
@@ -323,7 +327,6 @@ private fun TopBar(vm: HomeViewModel, tab: Int, onTab: (Int) -> Unit, openSettin
             Spacer(Modifier.width(20.dp))
         }
 
-        // Кнопка ТВ: открывает выбранное приложение (Lampa, ILTV…). Долгое нажатие — сменить приложение.
         FocusBox(
             Modifier, CircleShape, 1.12f,
             onClick = { if (vm.openTv()) onPick() },
