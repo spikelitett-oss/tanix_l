@@ -28,7 +28,6 @@ import com.tanix.launcher.R
 import com.tanix.launcher.ui.*
 import kotlinx.coroutines.delay
 
-/** Настройки в две панели (как в Google TV): слева категории, справа параметры. */
 @Composable
 fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
     val cs = MaterialTheme.colorScheme
@@ -46,7 +45,6 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
 
     Box(Modifier.fillMaxSize().background(cs.background)) {
         Row(Modifier.fillMaxSize().padding(horizontal = pad, vertical = vpad)) {
-            // ---- левая панель ----
             Column(
                 Modifier.width(260.dp).fillMaxHeight().clip(RoundedCornerShape(if (s.expressive) 36.dp else 28.dp))
                     .background(cs.surfaceContainerLow).verticalScroll(rememberScrollState()).padding(12.dp)
@@ -83,7 +81,6 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
 
             Spacer(Modifier.width(24.dp))
 
-            // ---- правая панель ----
             AnimatedContent(
                 targetState = cat,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -91,7 +88,7 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
                 label = "settingsPane"
             ) { c ->
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 40.dp)) {
-                    Text(cats[c], color = cs.onSurface, style = MaterialTheme.typography.headlineMedium)
+                    Text(cats[c], color = cs.onSurface, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
                     when (c) {
                         0 -> AppearancePane(vm)
                         1 -> HomePane(vm)
@@ -120,6 +117,10 @@ private fun AppearancePane(vm: HomeViewModel) {
             tr("Material 3 Expressive (имитация)", "Material 3 Expressive (imitation)"),
             tr("Пружинные анимации, крупные скругления, жирные шрифты", "Springy animations, bigger corners, bolder type"), s.expressive
         ) { v -> vm.update { it.copy(expressive = v) } }
+        SwitchRow(
+            tr("Fake Liquid Glass", "Fake Liquid Glass"),
+            tr("Полупрозрачные поверхности с бликами и обводкой", "Translucent surfaces with shine and borders"), s.liquidGlass
+        ) { v -> vm.update { it.copy(liquidGlass = v) } }
     }
     SettingsSection(tr("Размеры и формы", "Sizes and shapes")) {
         OptionRow(tr("Масштаб интерфейса", "Interface scale"), listOf("85%", "92%", "100%", "110%", "120%"), s.uiScale) { v -> vm.update { it.copy(uiScale = v) } }
@@ -207,16 +208,6 @@ private fun IconsPane(vm: HomeViewModel) {
         ) { v -> vm.update { it.copy(sortMode = v) } }
         SettingRow(tr("Сбросить порядок", "Reset order"), tr("Вернуть сортировку по алфавиту", "Back to alphabetical"), onClick = { vm.resetOrder() })
     }
-    SettingsSection(tr("Как переставлять плитки", "How to reorder tiles")) {
-        SettingRow(
-            tr("Долгое нажатие OK на плитке → «Переместить»", "Long press OK on a tile → Move"),
-            tr(
-                "Дальше стрелками на пульте; OK или Назад — готово. В меню также: убрать с главного экрана, избранное, скрыть, о приложении, удалить.",
-                "Then use the arrow keys; OK or Back when done. The menu also has: remove from home, favorites, hide, app info, uninstall."
-            ),
-            onClick = {}
-        )
-    }
 }
 
 @Composable
@@ -238,16 +229,6 @@ private fun WatchPane(vm: HomeViewModel) {
         SwitchRow(tr("Время последнего запуска в большом блоке", "Last-opened time in the big block"), null, s.posterDesc) { v -> vm.update { it.copy(posterDesc = v) } }
         SettingRow(tr("Очистить историю запусков", "Clear launch history"), null, onClick = { vm.clearOpened() })
     }
-    SettingsSection(tr("Как это работает", "How it works")) {
-        SettingRow(
-            tr("Карточки — выбранные вами приложения", "Cards are the apps you choose"),
-            tr(
-                "Приложение, которое вы открыли последним из лаунчера, встаёт первым. Долгое нажатие OK на карточке — меню.",
-                "The app you opened last from the launcher goes first. Long press OK on a card for the menu."
-            ),
-            onClick = {}
-        )
-    }
     if (showApps) WatchAppsDialog(vm) { showApps = false }
 }
 
@@ -259,12 +240,12 @@ private fun AnimationsPane(vm: HomeViewModel) {
             Chip(tr("Как в Google TV", "Like Google TV")) {
                 vm.update {
                     it.copy(animOn = true, animSpeed = 1, focusK = 2, focusStyle = 0, enterAnim = true,
-                        glow = true, shine = true, kenBurns = true, bgStyle = 2, launchAnim = true)
+                        glow = true, shine = true, kenBurns = true, bgStyle = 2, launchAnim = true, liquidGlass = true)
                 }
             }
             Chip(tr("Лёгкий режим (слабые приставки)", "Light mode (weak devices)")) {
                 vm.update {
-                    it.copy(animOn = false, enterAnim = false, glow = false, shine = false, kenBurns = false, bgStyle = 0, focusK = 1, launchAnim = false)
+                    it.copy(animOn = false, enterAnim = false, glow = false, shine = false, kenBurns = false, bgStyle = 0, focusK = 1, launchAnim = false, liquidGlass = false)
                 }
             }
         }
@@ -303,10 +284,6 @@ private fun AnimationsPane(vm: HomeViewModel) {
             tr("Толщина контура", "Outline thickness"),
             listOf(tr("Тонкий", "Thin"), tr("Средний", "Medium"), tr("Толстый", "Thick")), s.ringWidth
         ) { v -> vm.update { it.copy(ringWidth = v) } }
-        OptionRow(
-            tr("Цвет контура", "Outline color"),
-            listOf(tr("Авто", "Auto"), tr("Белый", "White"), tr("Акцентный", "Accent"), tr("Дополнительный", "Tertiary"), tr("Золотой", "Gold")), s.ringColor
-        ) { v -> vm.update { it.copy(ringColor = v) } }
     }
 }
 
@@ -381,50 +358,4 @@ private fun SystemPane(vm: HomeViewModel) {
         )
     }
     SettingsSection(tr("Главный экран", "Home screen")) {
-        SettingRow(tr("Сделать Tanix главным экраном", "Make Tanix the home screen"), tr("Откроются системные настройки главного экрана", "Opens the system home screen settings"), onClick = { openHomeSettings(ctx) })
-        SettingRow(tr("Пройти первоначальную настройку заново", "Run the first-time setup again"), null, onClick = { vm.update { it.copy(onboarded = false) } })
-        SettingRow(
-            tr("Сбросить оформление", "Reset appearance"),
-            tr("Язык, город, избранное и скрытые приложения сохранятся", "Language, city, favorites and hidden apps are kept"),
-            onClick = { confirmReset = true }
-        )
-    }
-    if (confirmReset) {
-        ConfirmDialog(
-            tr("Сбросить оформление?", "Reset appearance?"),
-            tr("Все параметры внешнего вида вернутся к значениям по умолчанию.", "All look settings return to their defaults."),
-            tr("Сбросить", "Reset"),
-            onConfirm = { vm.resetAppearance(); confirmReset = false }, onDismiss = { confirmReset = false }
-        )
-    }
-}
-
-/** О лаунчере. Пасхалка: 7 нажатий на «Информация о лаунчере» — логотип Tanix; удержание — змейка. */
-@Composable
-private fun AboutPane(vm: HomeViewModel) {
-    var taps by remember { mutableIntStateOf(0) }
-    var lastTap by remember { mutableLongStateOf(0L) }
-    var showLogo by remember { mutableStateOf(false) }
-    var showGame by remember { mutableStateOf(false) }
-    SettingsSection(tr("О лаунчере", "About")) {
-        SettingRow(
-            tr("Информация о лаунчере", "Launcher information"),
-            "Tanix Launcher 1.0",
-            onClick = {
-                val now = System.currentTimeMillis()
-                taps = if (now - lastTap > 3000L) 1 else taps + 1
-                lastTap = now
-                if (taps >= 7) { taps = 0; showLogo = true }
-            },
-            onLongClick = { showGame = true }
-        )
-        SettingRow(
-            tr("Разработан исключительно для приставок Tanix и слабых процессоров", "Made exclusively for Tanix set-top boxes and low-power processors"),
-            tr("Лёгкий, быстрый и без лишних сервисов", "Light, fast and without extra services"),
-            onClick = {}
-        )
-        SettingRow("Version", "1.0", onClick = {})
-    }
-    if (showLogo) LogoEgg(onDismiss = { showLogo = false }, onPlay = { showLogo = false; showGame = true })
-    if (showGame) SnakeGame { showGame = false }
-}
+        SettingRow(tr("Сделать Tanix главным экраном", "Make Tanix the home screen"), tr("Откроются системные настройки главного эк
