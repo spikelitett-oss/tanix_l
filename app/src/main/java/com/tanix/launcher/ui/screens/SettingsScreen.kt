@@ -1,10 +1,14 @@
 package com.tanix.launcher.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -27,6 +33,7 @@ import com.tanix.launcher.HomeViewModel
 import com.tanix.launcher.R
 import com.tanix.launcher.ui.*
 import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 @Composable
 fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
@@ -36,7 +43,7 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
     val ms = animMs(240)
     val cats = listOf(
         tr("Внешний вид", "Appearance"), tr("Главный экран", "Home screen"), tr("Плитки", "Tiles"),
-        tr("Продолжить просмотр", "Continue watching"), tr("Анимации и контур", "Animations & outline"),
+        tr("Продолжить просмотр", "Continue watching"), tr("Анимации", "Animations"),
         tr("Погода и время", "Weather & time"), tr("Приложения", "Apps"), tr("Система", "System"),
         tr("О лаунчере", "About")
     )
@@ -59,15 +66,22 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
                     Text(tr("Настройки", "Settings"), color = cs.onSurface, style = MaterialTheme.typography.titleLarge)
                 }
                 cats.forEachIndexed { i, name ->
-                    FocusBox(Modifier.fillMaxWidth(), CircleShape, 1.0f, onClick = { cat = i }, onFocusChange = { if (it) cat = i }) { f ->
-                        Text(
-                            name,
-                            color = when { f -> cs.onPrimary; i == cat -> cs.onSecondaryContainer; else -> cs.onSurfaceVariant },
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.fillMaxWidth()
-                                .background(when { f -> cs.primary; i == cat -> cs.secondaryContainer; else -> androidx.compose.ui.graphics.Color.Transparent })
-                                .padding(horizontal = 20.dp, vertical = 14.dp)
-                        )
+                    var visible by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        delay(i * 50L)
+                        visible = true
+                    }
+                    AnimatedVisibility(visible = visible, enter = fadeIn(tween(300))) {
+                        FocusBox(Modifier.fillMaxWidth(), CircleShape, 1.0f, onClick = { cat = i }, onFocusChange = { if (it) cat = i }) { f ->
+                            Text(
+                                name,
+                                color = when { f -> cs.onPrimary; i == cat -> cs.onSecondaryContainer; else -> cs.onSurfaceVariant },
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.fillMaxWidth()
+                                    .background(when { f -> cs.primary; i == cat -> cs.secondaryContainer; else -> Color.Transparent })
+                                    .padding(horizontal = 20.dp, vertical = 14.dp)
+                            )
+                        }
                     }
                     Spacer(Modifier.height(12.dp))
                 }
@@ -117,10 +131,6 @@ private fun AppearancePane(vm: HomeViewModel) {
             tr("Material 3 Expressive (имитация)", "Material 3 Expressive (imitation)"),
             tr("Пружинные анимации, крупные скругления, жирные шрифты", "Springy animations, bigger corners, bolder type"), s.expressive
         ) { v -> vm.update { it.copy(expressive = v) } }
-        SwitchRow(
-            tr("Fake Liquid Glass", "Fake Liquid Glass"),
-            tr("Полупрозрачные поверхности с бликами и обводкой", "Translucent surfaces with shine and borders"), s.liquidGlass
-        ) { v -> vm.update { it.copy(liquidGlass = v) } }
     }
     SettingsSection(tr("Размеры и формы", "Sizes and shapes")) {
         OptionRow(tr("Масштаб интерфейса", "Interface scale"), listOf("85%", "92%", "100%", "110%", "120%"), s.uiScale) { v -> vm.update { it.copy(uiScale = v) } }
@@ -162,7 +172,7 @@ private fun HomePane(vm: HomeViewModel) {
     SettingsSection(tr("Шапка", "Top bar")) {
         SwitchRow(tr("Логотип Tanix", "Tanix logo"), null, s.showLogo) { v -> vm.update { it.copy(showLogo = v) } }
         OptionRow(tr("Прозрачность логотипа", "Logo opacity"), listOf("35%", "55%", "75%", "100%"), s.logoAlpha) { v -> vm.update { it.copy(logoAlpha = v) } }
-        SwitchRow(tr("Вкладки (Для вас / Приложения / Магазин)", "Tabs: For you / Apps / Store"), null, s.showTabs) { v -> vm.update { it.copy(showTabs = v) } }
+        SwitchRow(tr("Вкладки (Для вас / Приложения / ТВ)", "Tabs: For you / Apps / TV"), null, s.showTabs) { v -> vm.update { it.copy(showTabs = v) } }
         SwitchRow(
             tr("Переключать вкладки при наведении", "Switch tabs on focus"),
             tr("Как в Google TV; иначе - по нажатию OK", "Like Google TV; otherwise on OK"), s.tabOnFocus
@@ -240,12 +250,12 @@ private fun AnimationsPane(vm: HomeViewModel) {
             Chip(tr("Как в Google TV", "Like Google TV")) {
                 vm.update {
                     it.copy(animOn = true, animSpeed = 1, focusK = 2, focusStyle = 0, enterAnim = true,
-                        glow = true, shine = true, kenBurns = true, bgStyle = 2, launchAnim = true, liquidGlass = true)
+                        glow = true, shine = true, kenBurns = true, bgStyle = 2, launchAnim = true)
                 }
             }
             Chip(tr("Лёгкий режим (слабые приставки)", "Light mode (weak devices)")) {
                 vm.update {
-                    it.copy(animOn = false, enterAnim = false, glow = false, shine = false, kenBurns = false, bgStyle = 0, focusK = 1, launchAnim = false, liquidGlass = false)
+                    it.copy(animOn = false, enterAnim = false, glow = false, shine = false, kenBurns = false, bgStyle = 0, focusK = 1, launchAnim = false)
                 }
             }
         }
@@ -382,6 +392,12 @@ private fun AboutPane(vm: HomeViewModel) {
     var lastTap by remember { mutableLongStateOf(0L) }
     var showLogo by remember { mutableStateOf(false) }
     var showGame by remember { mutableStateOf(false) }
+    var showHearts by remember { mutableStateOf(false) }
+
+    if (showHearts) {
+        HeartsOverlay(onEnd = { showHearts = false })
+    }
+
     SettingsSection(tr("О лаунчере", "About")) {
         SettingRow(
             tr("Информация о лаунчере", "Launcher information"),
@@ -395,12 +411,57 @@ private fun AboutPane(vm: HomeViewModel) {
             onLongClick = { showGame = true }
         )
         SettingRow(
-            tr("Разработан исключительно для приставок Tanix", "Made exclusively for Tanix set-top boxes"),
-            tr("Легкий, быстрый и без лишних сервисов", "Light, fast and without extra services"),
-            onClick = {}
+            tr("Создано с любовью LowkiTech", "Made with love by LowkiTech"),
+            tr("Разработано для приставок Tanix", "Developed for Tanix set-top boxes"),
+            onClick = {
+                val now = System.currentTimeMillis()
+                taps = if (now - lastTap > 3000L) 1 else taps + 1
+                lastTap = now
+                if (taps >= 8) { 
+                    taps = 0
+                    showHearts = true 
+                }
+            }
         )
         SettingRow("Version", "1.0", onClick = {})
     }
     if (showLogo) LogoEgg(onDismiss = { showLogo = false }, onPlay = { showLogo = false; showGame = true })
     if (showGame) SnakeGame { showGame = false }
 }
+
+@Composable
+fun HeartsOverlay(onEnd: () -> Unit) {
+    val hearts = remember { List(30) { HeartParticle() } }
+    var isRunning by remember { mutableStateOf(true) }
+    
+    LaunchedEffect(Unit) {
+        delay(5000L)
+        isRunning = false
+        onEnd()
+    }
+    
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, tween(5000, easing = LinearEasing))
+    }
+    
+    Canvas(Modifier.fillMaxSize()) {
+        if (isRunning) {
+            hearts.forEach { h ->
+                val y = size.height - (size.height * h.speed * progress.value)
+                drawCircle(
+                    color = h.color,
+                    radius = h.size,
+                    center = Offset(h.x * size.width, y)
+                )
+            }
+        }
+    }
+}
+
+data class HeartParticle(
+    val x: Float = Random.nextFloat(),
+    val speed: Float = 0.5f + Random.nextFloat(),
+    val size: Float = 20f + Random.nextFloat() * 30f,
+    val color: Color = listOf(Color.Red, Color.Magenta, Color(0xFFFF5252)).random()
+)
