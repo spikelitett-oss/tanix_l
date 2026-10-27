@@ -16,6 +16,7 @@ data class LauncherSettings(
     val accentHue: Float = 250f,
     val amoled: Boolean = false,
     val expressive: Boolean = true,      // имитация Material 3 Expressive
+    val liquidGlass: Boolean = true,     // фейковый Liquid Glass
     val uiScale: Int = 2,
     val fontScale: Int = 1,
     val cornerStyle: Int = 1,
@@ -37,7 +38,7 @@ data class LauncherSettings(
     val showDate: Boolean = false,
 
     // ---- Ряды ----
-    val showWatch: Boolean = true,       // «Продолжить просмотр»
+    val showWatch: Boolean = true,
     val showAppsRow: Boolean = true,
     val showFavRow: Boolean = false,
     val showRecentRow: Boolean = false,
@@ -53,19 +54,19 @@ data class LauncherSettings(
     // ---- Значки ----
     val iconSize: Int = 2,
     val sortMode: Int = 1,
-    val tileStyle: Int = 0,
+    val tileStyle: Int = 1, // 0 баннеры, 1 круг (по умолчанию как в Google TV)
     val labelMode: Int = 1,
 
     // ---- Анимации ----
     val animOn: Boolean = true,
     val animSpeed: Int = 1,
     val focusK: Int = 2,
-    val focusStyle: Int = 0,             // 0 контур+увеличение, 1 только увеличение, 2 только контур, 3 плавный контур без увеличения
+    val focusStyle: Int = 0,             
     val enterAnim: Boolean = true,
     val glow: Boolean = true,
     val shine: Boolean = true,
     val kenBurns: Boolean = true,
-    val launchAnim: Boolean = true,      // раскрытие приложения на весь экран
+    val launchAnim: Boolean = true,      
     val ringWidth: Int = 1,
     val ringColor: Int = 0,
 

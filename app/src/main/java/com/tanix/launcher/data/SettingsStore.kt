@@ -29,6 +29,7 @@ class SettingsStore(ctx: Context) {
             accentHue = sp.getFloat("accentHue", d.accentHue),
             amoled = b("amoled", d.amoled),
             expressive = b("expressive", d.expressive),
+            liquidGlass = b("liquidGlass", d.liquidGlass),
             uiScale = i("uiScale", d.uiScale),
             fontScale = i("fontScale", d.fontScale),
             cornerStyle = i("cornerStyle", d.cornerStyle),
@@ -94,6 +95,7 @@ class SettingsStore(ctx: Context) {
         e.putFloat("accentHue", s.accentHue)
         e.putBoolean("amoled", s.amoled)
         e.putBoolean("expressive", s.expressive)
+        e.putBoolean("liquidGlass", s.liquidGlass)
         e.putInt("uiScale", s.uiScale)
         e.putInt("fontScale", s.fontScale)
         e.putInt("cornerStyle", s.cornerStyle)
