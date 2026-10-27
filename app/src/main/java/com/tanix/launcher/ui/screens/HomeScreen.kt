@@ -4,24 +4,8 @@ package com.tanix.launcher.ui.screens
 
 import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +24,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
@@ -116,7 +101,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                 ) { t ->
                     when (t) {
                         0 -> Column(Modifier.fillMaxSize()) {
-                            ChannelsRow(vm)
+                            AdBanner()
                             Spacer(Modifier.height(24.dp))
                             
                             ForYouPage(
@@ -134,7 +119,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                             vm, visible, tr("Нет приложений", "No apps"), moving,
                             onMenu = { menuApp = it }, onDone = { moving = null }, onLaunch = launchApp
                         )
-                        else -> StorePage(vm)
+                        else -> TvPage(vm)
                     }
                 }
             }
@@ -146,7 +131,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                 exit = fadeOut(tween(ms)) + slideOutVertically(tween(ms)) { it }
             ) {
                 Text(
-                    tr("◀ ▶ ▲ ▼ — переместить   ·   OK или Назад — готово", "◀ ▶ ▲ ▼ — move   ·   OK or Back — done"),
+                    tr("◀ ▶ ▲ ▼ - переместить   ·   OK или Назад - готово", "◀ ▶ ▲ ▼ - move   ·   OK or Back - done"),
                     color = cs.onTertiaryContainer, style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.clip(CircleShape).background(cs.tertiaryContainer).padding(horizontal = 20.dp, vertical = 10.dp)
                 )
@@ -183,6 +168,17 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
     if (showWatchApps) WatchAppsDialog(vm) { showWatchApps = false }
     if (showChannels) ChannelsDialog(vm) { showChannels = false }
     if (showReorder) ReorderAppsDialog(vm) { showReorder = false }
+}
+
+@Composable
+fun TvPage(vm: HomeViewModel) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Раздел ТВ", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(16.dp))
+            Text("Данный раздел сейчас в разработке и тестировании.", style = MaterialTheme.typography.bodyLarge)
+        }
+    }
 }
 
 @Composable
@@ -285,7 +281,7 @@ private fun TopBar(vm: HomeViewModel, tab: Int, onTab: (Int) -> Unit, openSettin
     val cs = MaterialTheme.colorScheme
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) { while (true) { now = Date(); delay(15_000) } }
-    val tabs = listOf(tr("Для вас", "For you"), tr("Приложения", "Apps"), tr("Магазин", "Store"))
+    val tabs = listOf(tr("Для вас", "For you"), tr("Приложения", "Apps"), tr("ТВ", "TV"))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (s.showLogo) {
@@ -347,39 +343,27 @@ private fun TopBar(vm: HomeViewModel, tab: Int, onTab: (Int) -> Unit, openSettin
 private fun WeatherChip(vm: HomeViewModel) {
     val cs = MaterialTheme.colorScheme
     val s = vm.s
-    val en = s.lang == 1
     val w = vm.weather
-    FocusBox(Modifier, CircleShape, 1.05f, onClick = { vm.loadWeather() }) { f ->
-        val fg = if (f) cs.onPrimary else cs.onSecondaryContainer
+    
+    val isSunny = w?.code in 0..3
+    val bgColor = if (isSunny) Color(0xFFFFB300) else cs.surfaceContainerHigh
+    
+    FocusBox(Modifier, CircleShape, 1.05f, onClick = { /* Открыть детальную погоду */ }) { f ->
         Row(
-            Modifier.background(if (f) cs.primary else cs.secondaryContainer).padding(horizontal = 16.dp, vertical = 6.dp),
+            Modifier.background(if (f) cs.primary else bgColor).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val contentColor = if (f) cs.onPrimary else if (isSunny) Color.White else cs.onSurface
+            
             if (w == null) {
-                WeatherIcon(3, 32.dp)
-                Spacer(Modifier.width(6.dp))
-                Text(if (vm.weatherError != null) "—°" else "…", color = fg, style = MaterialTheme.typography.titleMedium)
+                WeatherIcon(3, 24.dp, contentColor)
                 Spacer(Modifier.width(8.dp))
-                Text(s.city, color = fg, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                Text("...", color = contentColor, style = MaterialTheme.typography.titleMedium)
             } else {
                 val r = w.temp.roundToInt()
-                WeatherIcon(w.code, 32.dp)
-                Spacer(Modifier.width(6.dp))
-                Text((if (r > 0) "+$r" else "$r") + "°", color = fg, style = MaterialTheme.typography.titleMedium)
+                WeatherIcon(w.code, 24.dp, contentColor)
                 Spacer(Modifier.width(8.dp))
-                Text(s.city, color = fg, style = MaterialTheme.typography.labelMedium, maxLines = 1)
-                if (s.weatherDesc) {
-                    Spacer(Modifier.width(8.dp))
-                    Text(com.tanix.launcher.data.Repo.weatherDesc(w.code, en), color = fg, style = MaterialTheme.typography.labelMedium, maxLines = 1)
-                }
-                if (s.weatherFeels) {
-                    val fl = w.feels.roundToInt()
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        (if (en) "feels " else "ощущ. ") + (if (fl > 0) "+$fl" else "$fl") + "°",
-                        color = fg, style = MaterialTheme.typography.labelMedium, maxLines = 1
-                    )
-                }
+                Text((if (r > 0) "+$r" else "$r") + "°", color = contentColor, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
