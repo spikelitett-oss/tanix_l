@@ -17,13 +17,28 @@ import androidx.compose.ui.unit.Dp
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Объёмные значки погоды, нарисованные кодом (градиенты, блики, мягкие тени). */
 @Composable
-fun WeatherIcon(code: Int, size: Dp) {
-    Canvas(Modifier.size(size)) { drawWeather(code) }
+fun WeatherIcon(code: Int, size: Dp, tint: Color? = null) {
+    Canvas(Modifier.size(size)) { drawWeather(code, tint) }
 }
 
-private fun DrawScope.sun(c: Offset, r: Float, rays: Boolean) {
+private fun DrawScope.sun(c: Offset, r: Float, rays: Boolean, tint: Color? = null) {
+    if (tint != null) {
+        if (rays) {
+            for (i in 0 until 8) {
+                val a = Math.toRadians(i * 45.0)
+                val dx = cos(a).toFloat()
+                val dy = sin(a).toFloat()
+                drawLine(
+                    tint, c + Offset(dx, dy) * (r * 1.32f), c + Offset(dx, dy) * (r * 1.72f),
+                    strokeWidth = r * 0.22f, cap = StrokeCap.Round
+                )
+            }
+        }
+        drawCircle(tint, radius = r, center = c)
+        return
+    }
+
     drawCircle(
         Brush.radialGradient(listOf(Color(0x66FFC107), Color.Transparent), center = c, radius = r * 2.2f),
         radius = r * 2.2f, center = c
@@ -50,7 +65,6 @@ private fun DrawScope.sun(c: Offset, r: Float, rays: Boolean) {
 }
 
 private fun DrawScope.cloudParts(left: Float, top: Float, w: Float, h: Float, fill: (Offset) -> Unit, rr: (Offset, Size, Float) -> Unit) {
-    // основание + два «облачка»
     val baseTop = top + h * 0.5f
     rr(Offset(left, baseTop), Size(w, top + h - baseTop), (top + h - baseTop) / 2f)
     fill(Offset(left + w * 0.30f, top + h * 0.55f))
@@ -60,7 +74,6 @@ private fun DrawScope.cloudParts(left: Float, top: Float, w: Float, h: Float, fi
 private fun DrawScope.cloud(left: Float, top: Float, w: Float, h: Float, light: Color, dark: Color) {
     val rSmall = h * 0.28f
     val rBig = h * 0.42f
-    // мягкая тень под облаком — даёт объём
     val shadow = Color(0x33000000)
     val so = Offset(0f, h * 0.07f)
     cloudParts(left, top, w, h,
@@ -70,7 +83,6 @@ private fun DrawScope.cloud(left: Float, top: Float, w: Float, h: Float, light: 
     cloudParts(left, top, w, h,
         fill = { c -> drawCircle(brush, if (c.x < left + w * 0.45f) rSmall else rBig, c) },
         rr = { o, s, r -> drawRoundRect(brush, o, s, CornerRadius(r)) })
-    // блик на верхней кромке
     val cx = left + w * 0.58f
     val cy = top + h * 0.42f
     drawArc(
@@ -119,20 +131,20 @@ private fun DrawScope.bolt(x: Float, y: Float, w: Float, h: Float) {
     drawPath(p, Color(0xFFFFE082), style = Stroke(w * 0.04f))
 }
 
-private fun DrawScope.drawWeather(code: Int) {
+private fun DrawScope.drawWeather(code: Int, tint: Color? = null) {
     val s = size.minDimension
     val lightCloud = Color(0xFFFFFFFF)
     val midCloud = Color(0xFFB0BEC5)
     val darkLight = Color(0xFFB0BEC5)
     val darkCloud = Color(0xFF607D8B)
     when (code) {
-        0 -> sun(Offset(s * 0.5f, s * 0.5f), s * 0.24f, true)
+        0 -> sun(Offset(s * 0.5f, s * 0.5f), s * 0.24f, true, tint)
         1 -> {
-            sun(Offset(s * 0.42f, s * 0.40f), s * 0.2f, true)
+            sun(Offset(s * 0.42f, s * 0.40f), s * 0.2f, true, tint)
             cloud(s * 0.30f, s * 0.46f, s * 0.64f, s * 0.40f, lightCloud, Color(0xFFCFD8DC))
         }
         2 -> {
-            sun(Offset(s * 0.36f, s * 0.34f), s * 0.19f, true)
+            sun(Offset(s * 0.36f, s * 0.34f), s * 0.19f, true, tint)
             cloud(s * 0.2f, s * 0.38f, s * 0.72f, s * 0.46f, lightCloud, midCloud)
         }
         45, 48 -> {
