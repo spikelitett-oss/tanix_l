@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -84,7 +87,6 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
             HomeBackground(if (tabIndex == 0) bgApp else null)
 
             Column(Modifier.fillMaxSize().padding(horizontal = pad, vertical = vpad)) {
-                // Верхняя панель с новыми иконками и порядком
                 TopBar(vm, tabIndex, onTab = { tabIndex = it }, openSettings = openSettings)
                 
                 Spacer(Modifier.height(24.dp)) 
@@ -99,12 +101,10 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                     },
                     label = "tabs"
                 ) { t ->
-                    // Берем реальную вкладку из настроек
                     val actualTab = s.tabOrder.getOrElse(t) { 0 }
                     when (actualTab) {
                         0 -> Column(Modifier.fillMaxSize()) {
                             TvBanner(vm) { 
-                                // Если нажали "Смотреть", переключаемся на вкладку ТВ
                                 val tvIndex = s.tabOrder.indexOf(2)
                                 if (tvIndex != -1) tabIndex = tvIndex
                             }
@@ -125,7 +125,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                             vm, visible, tr("Нет приложений", "No apps"), moving,
                             onMenu = { menuApp = it }, onDone = { moving = null }, onLaunch = launchApp
                         )
-                        else -> TvScreen(vm) // Передаем vm для сохранения канала
+                        else -> TvScreen(vm)
                     }
                 }
             }
@@ -272,15 +272,6 @@ private fun TopBar(vm: HomeViewModel, tabIndex: Int, onTab: (Int) -> Unit, openS
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) { while (true) { now = Date(); delay(15_000) } }
     
-    // Функция для получения иконки и текста по ID вкладки
-    fun getTabInfo(id: Int): Pair<String, ImageVector> {
-        return when (id) {
-            0 -> tr("Дом", "Home") to Icons.Default.Home
-            1 -> tr("Приложения", "Apps") to Icons.Default.Apps
-            else -> tr("ТВ", "TV") to Icons.Default.Tv
-        }
-    }
-
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (s.showLogo) {
             Image(
@@ -295,9 +286,17 @@ private fun TopBar(vm: HomeViewModel, tabIndex: Int, onTab: (Int) -> Unit, openS
                 Modifier.clip(CircleShape).background(cs.surfaceContainer.copy(alpha = 0.75f)).padding(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Итерируемся по сохраненному порядку вкладок
                 s.tabOrder.forEachIndexed { i, tabId ->
-                    val (title, icon) = getTabInfo(tabId)
+                    val title = when (tabId) {
+                        0 -> tr("Дом", "Home")
+                        1 -> tr("Приложения", "Apps")
+                        else -> tr("ТВ", "TV")
+                    }
+                    val icon = when (tabId) {
+                        0 -> Icons.Default.Home
+                        1 -> Icons.Default.Menu
+                        else -> Icons.Default.PlayArrow
+                    }
                     TabPillWithIcon(title, icon, tabIndex == i, onFocus = { if (s.tabOnFocus) onTab(i) }, onClick = { onTab(i) })
                     if (i < s.tabOrder.lastIndex) Spacer(Modifier.width(16.dp)) 
                 }
@@ -321,7 +320,6 @@ private fun TopBar(vm: HomeViewModel, tabIndex: Int, onTab: (Int) -> Unit, openS
             Spacer(Modifier.width(20.dp))
         }
 
-        // Кнопку ТВ убрали, оставили только настройки
         FocusBox(Modifier, CircleShape, 1.12f, onClick = openSettings) { f ->
             Box(Modifier.size(40.dp).background(if (f) cs.primary else cs.secondaryContainer), contentAlignment = Alignment.Center) {
                 Icon(Icons.Filled.Settings, tr("Настройки", "Settings"), tint = if (f) cs.onPrimary else cs.onSecondaryContainer)
@@ -330,7 +328,6 @@ private fun TopBar(vm: HomeViewModel, tabIndex: Int, onTab: (Int) -> Unit, openS
     }
 }
 
-// Новая вкладка с иконкой
 @Composable
 fun TabPillWithIcon(text: String, icon: ImageVector, selected: Boolean, onFocus: () -> Unit, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
