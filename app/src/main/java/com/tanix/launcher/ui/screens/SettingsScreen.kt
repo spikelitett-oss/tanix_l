@@ -49,7 +49,7 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
         tr("Анимации", "Animations"),
         tr("Погода и время", "Weather & time"), 
         tr("Приложения", "Apps"), 
-        tr("Настройки ТВ", "TV Settings"), // НОВАЯ КАТЕГОРИЯ
+        tr("Настройки ТВ", "TV Settings"), 
         tr("Система", "System"),
         tr("О лаунчере", "About")
     )
@@ -117,7 +117,7 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
                         4 -> AnimationsPane(vm)
                         5 -> WeatherTimePane(vm)
                         6 -> AppsPane(vm)
-                        7 -> TvSettingsPane(vm) // Вызов настроек ТВ
+                        7 -> TvSettingsPane(vm) 
                         8 -> SystemPane(vm)
                         else -> AboutPane(vm)
                     }
@@ -140,7 +140,7 @@ private fun TvSettingsPane(vm: HomeViewModel) {
         OptionRow(
             tr("Масштаб картинки ТВ", "TV Image Scale"),
             listOf("90%", "95%", "100%", "105%", "110%"), 
-            (s.tvScale - 90) / 5 // Вычисляем индекс для выделения
+            (s.tvScale - 90) / 5 
         ) { v -> vm.update { it.copy(tvScale = 90 + (v * 5)) } }
     }
 }
@@ -176,7 +176,37 @@ private fun AppearancePane(vm: HomeViewModel) {
             OptionRow(tr("Размер полей", "Margin size"), listOf("24", "40", "56", "72"), s.screenPadding) { v -> vm.update { it.copy(screenPadding = v) } }
         }
     }
-        SettingsSection(tr("Порядок вкладок", "Tab order")) {
+    SettingsSection(tr("Фон", "Background")) {
+        OptionRow(
+            tr("Стиль фона", "Background style"),
+            listOf(tr("Градиент", "Gradient"), tr("Однотонный", "Solid"), tr("Как в Google TV", "Like Google TV")), s.bgStyle
+        ) { v -> vm.update { it.copy(bgStyle = v) } }
+        OptionRow(
+            tr("Затемнение фона", "Background dimming"),
+            listOf(tr("Слабое", "Light"), tr("Среднее", "Medium"), tr("Сильное", "Strong")), s.bgDim
+        ) { v -> vm.update { it.copy(bgDim = v) } }
+    }
+}
+
+@Composable
+private fun HomePane(vm: HomeViewModel) {
+    val s = vm.s
+    val cs = MaterialTheme.colorScheme
+    val ru = s.lang != 1
+    var showChannels by remember { mutableStateOf(false) }
+    
+    SettingsSection(tr("Шапка", "Top bar")) {
+        SwitchRow(tr("Логотип Tanix", "Tanix logo"), null, s.showLogo) { v -> vm.update { it.copy(showLogo = v) } }
+        OptionRow(tr("Прозрачность логотипа", "Logo opacity"), listOf("35%", "55%", "75%", "100%"), s.logoAlpha) { v -> vm.update { it.copy(logoAlpha = v) } }
+        SwitchRow(tr("Вкладки", "Tabs"), null, s.showTabs) { v -> vm.update { it.copy(showTabs = v) } }
+        SwitchRow(
+            tr("Переключать вкладки при наведении", "Switch tabs on focus"),
+            tr("Как в Google TV; иначе - по нажатию OK", "Like Google TV; otherwise on OK"), s.tabOnFocus
+        ) { v -> vm.update { it.copy(tabOnFocus = v) } }
+    }
+
+    // НОВОЕ: Настройка порядка вкладок
+    SettingsSection(tr("Порядок вкладок", "Tab order")) {
         s.tabOrder.forEachIndexed { i, tabId ->
             val name = when(tabId) { 0 -> tr("Дом", "Home"); 1 -> tr("Приложения", "Apps"); else -> tr("ТВ", "TV") }
             key(tabId) {
@@ -201,34 +231,8 @@ private fun AppearancePane(vm: HomeViewModel) {
             }
         }
     }
-    SettingsSection(tr("Фон", "Background")) {
-        OptionRow(
-            tr("Стиль фона", "Background style"),
-            listOf(tr("Градиент", "Gradient"), tr("Однотонный", "Solid"), tr("Как в Google TV", "Like Google TV")), s.bgStyle
-        ) { v -> vm.update { it.copy(bgStyle = v) } }
-        OptionRow(
-            tr("Затемнение фона", "Background dimming"),
-            listOf(tr("Слабое", "Light"), tr("Среднее", "Medium"), tr("Сильное", "Strong")), s.bgDim
-        ) { v -> vm.update { it.copy(bgDim = v) } }
-    }
-}
 
-@Composable
-private fun HomePane(vm: HomeViewModel) {
-    val s = vm.s
-    val cs = MaterialTheme.colorScheme
-    val ru = s.lang != 1
-    var showChannels by remember { mutableStateOf(false) }
-    SettingsSection(tr("Шапка", "Top bar")) {
-        SwitchRow(tr("Логотип Tanix", "Tanix logo"), null, s.showLogo) { v -> vm.update { it.copy(showLogo = v) } }
-        OptionRow(tr("Прозрачность логотипа", "Logo opacity"), listOf("35%", "55%", "75%", "100%"), s.logoAlpha) { v -> vm.update { it.copy(logoAlpha = v) } }
-        SwitchRow(tr("Вкладки (Для вас / Приложения / ТВ)", "Tabs: For you / Apps / TV"), null, s.showTabs) { v -> vm.update { it.copy(showTabs = v) } }
-        SwitchRow(
-            tr("Переключать вкладки при наведении", "Switch tabs on focus"),
-            tr("Как в Google TV; иначе - по нажатию OK", "Like Google TV; otherwise on OK"), s.tabOnFocus
-        ) { v -> vm.update { it.copy(tabOnFocus = v) } }
-    }
-    SettingsSection(tr("Что показывать на вкладке Для вас", "What to show on the For you tab")) {
+    SettingsSection(tr("Что показывать на вкладке Дом", "What to show on the Home tab")) {
         SwitchRow(tr("Продолжить просмотр", "Continue watching"), null, s.showWatch) { v -> vm.update { it.copy(showWatch = v) } }
         SwitchRow(tr("Ряд Ваши приложения", "Your apps row"), null, s.showAppsRow) { v -> vm.update { it.copy(showAppsRow = v) } }
         SwitchRow(
@@ -237,6 +241,7 @@ private fun HomePane(vm: HomeViewModel) {
         ) { v -> vm.update { it.copy(showFavRow = v) } }
         SwitchRow(tr("Ряд Недавние", "Recent row"), null, s.showRecentRow) { v -> vm.update { it.copy(showRecentRow = v) } }
     }
+    
     SettingsSection(tr("Порядок рядов", "Row order")) {
         s.rowOrder.forEachIndexed { i, rk ->
             key(rk) {
@@ -366,10 +371,10 @@ private fun WeatherTimePane(vm: HomeViewModel) {
 @Composable
 private fun AppsPane(vm: HomeViewModel) {
     val s = vm.s
-    var showTv by remember { mutableStateOf(false) }
     var showHidden by remember { mutableStateOf(false) }
     var showHome by remember { mutableStateOf(false) }
     var showReorder by remember { mutableStateOf(false) }
+    
     SettingsSection(tr("Приложения на главном экране", "Apps on the home screen")) {
         SettingRow(
             tr("Выбрать приложения", "Choose apps"),
@@ -381,24 +386,15 @@ private fun AppsPane(vm: HomeViewModel) {
             vm.update { it.copy(homeConfigured = false, homeApps = emptyList()) }
         })
     }
-    SettingsSection(tr("Кнопка ТВ", "TV button")) {
-        SettingRow(
-            tr("Приложение для кнопки ТВ", "App for the TV button"),
-            vm.apps.firstOrNull { it.pkg == s.tvPkg }?.label ?: tr("Не выбрано (Lampa, ILTV)", "Not set (Lampa, ILTV)"),
-            onClick = { showTv = true }
-        )
-    }
+    
+    // УДАЛЕНА КНОПКА ТВ
+    
     SettingsSection(tr("Скрытые приложения", "Hidden apps")) {
         SettingRow(tr("Выбрать скрытые", "Choose hidden apps"), tr("Скрыто: ", "Hidden: ") + s.hidden.size, onClick = { showHidden = true })
         SettingRow(tr("Показать все", "Show all"), null, onClick = { vm.update { it.copy(hidden = emptySet()) } })
     }
     if (showHome) HomeAppsDialog(vm) { showHome = false }
     if (showReorder) ReorderAppsDialog(vm) { showReorder = false }
-    if (showTv) {
-        AppListDialog(tr("Приложение для кнопки ТВ", "App for the TV button"), vm.orderedApps, onClick = { app ->
-            vm.update { it.copy(tvPkg = app.pkg) }; showTv = false
-        }, onDismiss = { showTv = false })
-    }
     if (showHidden) {
         AppListDialog(tr("Скрытые приложения", "Hidden apps"), vm.orderedApps, checked = s.hidden, onClick = { app ->
             vm.update { it.copy(hidden = if (app.pkg in it.hidden) it.hidden - app.pkg else it.hidden + app.pkg) }
