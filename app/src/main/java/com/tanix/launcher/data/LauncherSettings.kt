@@ -1,6 +1,7 @@
 package com.tanix.launcher.data
 
 val DefaultRowOrder = listOf("watch", "apps", "fav", "recent")
+val DefaultTabOrder = listOf(0, 1, 2) // 0=Дом, 1=Приложения, 2=ТВ
 
 fun normalizeRows(l: List<String>): List<String> =
     (l.map { if (it == "posters") "watch" else it }.filter { it in DefaultRowOrder }.distinct() + DefaultRowOrder).distinct()
@@ -35,6 +36,7 @@ data class LauncherSettings(
     val showFavRow: Boolean = false,
     val showRecentRow: Boolean = false,
     val rowOrder: List<String> = DefaultRowOrder,
+    val tabOrder: List<Int> = DefaultTabOrder, // НОВОЕ: порядок вкладок
     val posterSize: Int = 1,
     val posterDesc: Boolean = true,
     val posterBadge: Boolean = true,
@@ -59,7 +61,6 @@ data class LauncherSettings(
     val lat: Double = 55.7558,
     val lon: Double = 37.6176,
     val fahrenheit: Boolean = false,
-    val tvPkg: String? = null,
     val hidden: Set<String> = emptySet(),
     val favorites: Set<String> = emptySet(),
     val recents: List<String> = emptyList(),
@@ -67,7 +68,12 @@ data class LauncherSettings(
     val homeConfigured: Boolean = false,
     val homeApps: List<String> = emptyList(),
     
-    // НОВЫЕ НАСТРОЙКИ ДЛЯ ТВ
-    val tvScale: Int = 100,             // Масштаб 90-110%
-    val tvWhiteLogoBg: Boolean = true   // Белый фон логотипов
+    val tvScale: Int = 100,
+    val tvWhiteLogoBg: Boolean = true,
+
+    // НОВОЕ: Последний канал для баннера
+    val lastTvName: String = "",
+    val lastTvLogo: String = "",
+    val lastTvUrl: String = "",
+    val lastTvGroup: String = ""
 )
