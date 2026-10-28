@@ -1,44 +1,51 @@
-import com.tanix.launcher.ai.AstraDialog
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-
 @Composable
-fun AstraBanner(vm: com.tanix.launcher.HomeViewModel) {
-    var showAstra by remember { mutableStateOf(false) }
-    if (showAstra) AstraDialog(vm) { showAstra = false }
-
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-    ) {
-        Row(Modifier.fillMaxSize().padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = R.drawable.astra_logo), // Твоя картинка!
-                contentDescription = "Astra",
-                colorFilter = ColorFilter.tint(Color.White),
-                modifier = Modifier.weight(0.3f).fillMaxHeight()
-            )
-            Spacer(Modifier.width(24.dp))
-            Column(Modifier.weight(0.7f).fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-                Text(
-                    text = "Спроси меня о чем угодно",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
+fun TvBanner(vm: HomeViewModel, onGoTv: () -> Unit) {
+    val s = vm.s
+    if (s.lastTvUrl.isNotEmpty()) {
+        // Баннер с последним каналом
+        Box(
+            Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+        ) {
+            Row(Modifier.fillMaxSize().padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
+                AsyncImage(
+                    model = s.lastTvLogo,
+                    contentDescription = null,
+                    modifier = Modifier.size(140.dp).clip(RoundedCornerShape(16.dp)).background(if (s.tvWhiteLogoBg) Color.White else Color.Transparent)
                 )
-                Spacer(Modifier.height(16.dp))
-                FocusBox(Modifier.size(56.dp), CircleShape, 1.1f, onClick = { showAstra = true }) { f ->
-                    Box(Modifier.fillMaxSize().background(
-                        if (f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                    ), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Mic, "Ask Astra", tint = if (f) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.width(24.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = "Продолжить просмотр",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = s.lastTvName,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    FocusBox(Modifier.height(48.dp), CircleShape, 1.05f, onClick = onGoTv) { f ->
+                        Box(
+                            Modifier.fillMaxHeight().background(
+                                if (f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
+                            ).padding(horizontal = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Смотреть", color = if (f) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
                     }
                 }
+            }
+        }
+    } else {
+        // Если каналов еще не было
+        Box(
+            Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            contentAlignment = Alignment.Center
+        ) {
+            FocusBox(Modifier, CircleShape, 1.05f, onClick = onGoTv) { f ->
+                Text("Перейти в раздел ТВ", color = if (f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
             }
         }
     }
