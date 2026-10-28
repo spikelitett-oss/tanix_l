@@ -81,7 +81,9 @@ class SettingsStore(ctx: Context) {
             recents = list("recents"),
             appOrder = list("appOrder"),
             homeConfigured = b("homeConfigured", d.homeConfigured),
-            homeApps = list("homeApps")
+            homeApps = list("homeApps"),
+            tvScale = i("tvScale", d.tvScale),
+            tvWhiteLogoBg = b("tvWhiteLogoBg", d.tvWhiteLogoBg)
         )
     }
 
@@ -147,6 +149,8 @@ class SettingsStore(ctx: Context) {
         e.putString("appOrder", s.appOrder.joinToString(","))
         e.putBoolean("homeConfigured", s.homeConfigured)
         e.putString("homeApps", s.homeApps.joinToString(","))
+        e.putInt("tvScale", s.tvScale)
+        e.putBoolean("tvWhiteLogoBg", s.tvWhiteLogoBg)
         e.apply()
     }
 }
