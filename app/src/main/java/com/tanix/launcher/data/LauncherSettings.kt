@@ -65,5 +65,9 @@ data class LauncherSettings(
     val recents: List<String> = emptyList(),
     val appOrder: List<String> = emptyList(),
     val homeConfigured: Boolean = false,
-    val homeApps: List<String> = emptyList()
+    val homeApps: List<String> = emptyList(),
+    
+    // НОВЫЕ НАСТРОЙКИ ДЛЯ ТВ
+    val tvScale: Int = 100,             // Масштаб 90-110%
+    val tvWhiteLogoBg: Boolean = true   // Белый фон логотипов
 )
