@@ -7,7 +7,6 @@ plugins {
 
 base { archivesName.set("TanixLauncher") }
 
-// Подпись релиза из переменных окружения (GitHub Actions secrets); иначе — debug-ключ.
 val ksPath: String? = System.getenv("KEYSTORE_FILE")
 val hasKeystore = ksPath != null && File(ksPath).exists()
 
@@ -68,6 +67,13 @@ dependencies {
     implementation("androidx.compose.animation:animation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
+    
+    // Для картинок каналов и баннера
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
+    // Для IPTV плеера (ExoPlayer)
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.3.1")
 }
