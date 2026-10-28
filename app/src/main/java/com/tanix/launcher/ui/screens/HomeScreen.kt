@@ -101,7 +101,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                 ) { t ->
                     when (t) {
                         0 -> Column(Modifier.fillMaxSize()) {
-                            AdBanner()
+                            AstraBanner(vm) // Баннер с Астрой
                             Spacer(Modifier.height(24.dp))
                             
                             ForYouPage(
@@ -119,7 +119,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
                             vm, visible, tr("Нет приложений", "No apps"), moving,
                             onMenu = { menuApp = it }, onDone = { moving = null }, onLaunch = launchApp
                         )
-                        else -> TvPage(vm)
+                        else -> TvPage(vm) // Вкладка ТВ
                     }
                 }
             }
@@ -172,13 +172,7 @@ fun HomeScreen(vm: HomeViewModel, openSettings: () -> Unit) {
 
 @Composable
 fun TvPage(vm: HomeViewModel) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Раздел ТВ", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(16.dp))
-            Text("Данный раздел сейчас в разработке и тестировании.", style = MaterialTheme.typography.bodyLarge)
-        }
-    }
+    TvScreen() // Вызов плеера из TvScreen.kt
 }
 
 @Composable
