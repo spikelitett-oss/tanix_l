@@ -176,6 +176,31 @@ private fun AppearancePane(vm: HomeViewModel) {
             OptionRow(tr("Размер полей", "Margin size"), listOf("24", "40", "56", "72"), s.screenPadding) { v -> vm.update { it.copy(screenPadding = v) } }
         }
     }
+        SettingsSection(tr("Порядок вкладок", "Tab order")) {
+        s.tabOrder.forEachIndexed { i, tabId ->
+            val name = when(tabId) { 0 -> tr("Дом", "Home"); 1 -> tr("Приложения", "Apps"); else -> tr("ТВ", "TV") }
+            key(tabId) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(name, color = cs.onSurface, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Chip("^") { 
+                        if (i > 0) {
+                            val newList = s.tabOrder.toMutableList()
+                            val tmp = newList[i]; newList[i] = newList[i-1]; newList[i-1] = tmp
+                            vm.update { it.copy(tabOrder = newList) }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Chip("v") { 
+                        if (i < s.tabOrder.lastIndex) {
+                            val newList = s.tabOrder.toMutableList()
+                            val tmp = newList[i]; newList[i] = newList[i+1]; newList[i+1] = tmp
+                            vm.update { it.copy(tabOrder = newList) }
+                        }
+                    }
+                }
+            }
+        }
+    }
     SettingsSection(tr("Фон", "Background")) {
         OptionRow(
             tr("Стиль фона", "Background style"),
