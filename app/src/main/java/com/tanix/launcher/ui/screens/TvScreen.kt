@@ -25,6 +25,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.tanix.launcher.HomeViewModel
 import com.tanix.launcher.ui.FocusBox
 import com.tanix.launcher.ui.LocalSettings
 import kotlinx.coroutines.Dispatchers
@@ -37,24 +38,26 @@ data class IptvChannel(val name: String, val url: String, val logo: String?, val
 
 @OptIn(UnstableApi::class)
 @Composable
-fun TvScreen() {
+fun TvScreen(vm: HomeViewModel) {
     val context = LocalContext.current
     val s = LocalSettings.current
     
     var channels by remember { mutableStateOf<List<IptvChannel>>(emptyList()) }
     var groups by remember { mutableStateOf<List<String>>(listOf("Все")) }
     var selectedGroup by remember { mutableStateOf("Все") }
-    var currentChannel by remember { mutableStateOf<IptvChannel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Загрузка плейлиста
+    // Восстанавливаем последний канал, если он есть
+    var currentChannel by remember { 
+        mutableStateOf<IptvChannel?>(if (s.lastTvUrl.isNotEmpty()) IptvChannel(s.lastTvName, s.lastTvUrl, s.lastTvLogo, s.lastTvGroup) else null) 
+    }
+
     LaunchedEffect(Unit) {
         channels = fetchPlaylist("http://cdntv.online/hls/6rkzpedbum/playlist.m3u8")
         groups = listOf("Все") + channels.map { it.group }.distinct().sorted()
         isLoading = false
     }
 
-    // Настройка ExoPlayer
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply { playWhenReady = true }
     }
@@ -63,16 +66,17 @@ fun TvScreen() {
         currentChannel?.let {
             exoPlayer.setMediaItem(MediaItem.fromUri(it.url))
             exoPlayer.prepare()
+            // СОХРАНЯЕМ В НАСТРОЙКИ!
+            vm.update { settings -> 
+                settings.copy(lastTvName = it.name, lastTvUrl = it.url, lastTvLogo = it.logo ?: "", lastTvGroup = it.group) 
+            }
         }
     }
     DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
 
-    // Масштабирование экрана из настроек
     val scaleFactor = s.tvScale / 100f
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        
-        // ПЛЕЕР
         if (currentChannel != null) {
             AndroidView(
                 factory = { ctx ->
@@ -82,10 +86,9 @@ fun TvScreen() {
                         layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                     }
                 },
-                modifier = Modifier.fillMaxSize().scale(scaleFactor) // Применяем масштаб
+                modifier = Modifier.fillMaxSize().scale(scaleFactor)
             )
             
-            // Инфо-панель снизу
             Row(
                 Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(24.dp).scale(scaleFactor),
                 verticalAlignment = Alignment.CenterVertically
@@ -103,7 +106,6 @@ fun TvScreen() {
             }
         }
 
-        // МЕНЮ КАНАЛОВ (если видео не играет)
         if (isLoading || !exoPlayer.isPlaying) {
             if (isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -111,7 +113,6 @@ fun TvScreen() {
                 }
             } else {
                 Row(Modifier.fillMaxSize().scale(scaleFactor)) {
-                    // Группы
                     Column(Modifier.width(220.dp).fillMaxHeight().background(Color(0xFF1A1A1A)).padding(8.dp)) {
                         Text("Категории", color = Color.White, modifier = Modifier.padding(8.dp), fontWeight = FontWeight.Bold)
                         LazyColumn {
@@ -124,7 +125,6 @@ fun TvScreen() {
                         }
                     }
                     
-                    // Список каналов
                     LazyColumn(Modifier.weight(1f).fillMaxHeight().background(Color(0xFF0A0A0A)).padding(16.dp)) {
                         val filtered = if (selectedGroup == "Все") channels else channels.filter { it.group == selectedGroup }
                         items(filtered) { channel ->
