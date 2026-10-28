@@ -36,7 +36,7 @@ data class LauncherSettings(
     val showFavRow: Boolean = false,
     val showRecentRow: Boolean = false,
     val rowOrder: List<String> = DefaultRowOrder,
-    val tabOrder: List<Int> = DefaultTabOrder, // НОВОЕ: порядок вкладок
+    val tabOrder: List<Int> = DefaultTabOrder,
     val posterSize: Int = 1,
     val posterDesc: Boolean = true,
     val posterBadge: Boolean = true,
@@ -70,8 +70,6 @@ data class LauncherSettings(
     
     val tvScale: Int = 100,
     val tvWhiteLogoBg: Boolean = true,
-
-    // НОВОЕ: Последний канал для баннера
     val lastTvName: String = "",
     val lastTvLogo: String = "",
     val lastTvUrl: String = "",
