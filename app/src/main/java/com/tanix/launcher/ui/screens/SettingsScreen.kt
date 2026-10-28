@@ -42,9 +42,15 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
     var cat by remember { mutableIntStateOf(0) }
     val ms = animMs(240)
     val cats = listOf(
-        tr("Внешний вид", "Appearance"), tr("Главный экран", "Home screen"), tr("Плитки", "Tiles"),
-        tr("Продолжить просмотр", "Continue watching"), tr("Анимации", "Animations"),
-        tr("Погода и время", "Weather & time"), tr("Приложения", "Apps"), tr("Система", "System"),
+        tr("Внешний вид", "Appearance"), 
+        tr("Главный экран", "Home screen"), 
+        tr("Плитки", "Tiles"),
+        tr("Продолжить просмотр", "Continue watching"), 
+        tr("Анимации", "Animations"),
+        tr("Погода и время", "Weather & time"), 
+        tr("Приложения", "Apps"), 
+        tr("Настройки ТВ", "TV Settings"), // НОВАЯ КАТЕГОРИЯ
+        tr("Система", "System"),
         tr("О лаунчере", "About")
     )
     val pad = if (s.safeArea) Look.at(Look.Paddings, s.screenPadding).dp else 12.dp
@@ -111,12 +117,31 @@ fun SettingsScreen(vm: HomeViewModel, onBack: () -> Unit) {
                         4 -> AnimationsPane(vm)
                         5 -> WeatherTimePane(vm)
                         6 -> AppsPane(vm)
-                        7 -> SystemPane(vm)
+                        7 -> TvSettingsPane(vm) // Вызов настроек ТВ
+                        8 -> SystemPane(vm)
                         else -> AboutPane(vm)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TvSettingsPane(vm: HomeViewModel) {
+    val s = vm.s
+    SettingsSection(tr("Настройки ТВ", "TV Settings")) {
+        SwitchRow(
+            tr("Белый фон логотипов", "White logo background"),
+            tr("Если логотипы каналов прозрачные, включите белый фон", "If channel logos are transparent, enable white background"),
+            s.tvWhiteLogoBg
+        ) { v -> vm.update { it.copy(tvWhiteLogoBg = v) } }
+        
+        OptionRow(
+            tr("Масштаб картинки ТВ", "TV Image Scale"),
+            listOf("90%", "95%", "100%", "105%", "110%"), 
+            (s.tvScale - 90) / 5 // Вычисляем индекс для выделения
+        ) { v -> vm.update { it.copy(tvScale = 90 + (v * 5)) } }
     }
 }
 
