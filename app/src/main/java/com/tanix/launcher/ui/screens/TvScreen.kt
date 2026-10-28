@@ -47,7 +47,6 @@ fun TvScreen(vm: HomeViewModel) {
     var selectedGroup by remember { mutableStateOf("Все") }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Восстанавливаем последний канал, если он есть
     var currentChannel by remember { 
         mutableStateOf<IptvChannel?>(if (s.lastTvUrl.isNotEmpty()) IptvChannel(s.lastTvName, s.lastTvUrl, s.lastTvLogo, s.lastTvGroup) else null) 
     }
@@ -66,7 +65,6 @@ fun TvScreen(vm: HomeViewModel) {
         currentChannel?.let {
             exoPlayer.setMediaItem(MediaItem.fromUri(it.url))
             exoPlayer.prepare()
-            // СОХРАНЯЕМ В НАСТРОЙКИ!
             vm.update { settings -> 
                 settings.copy(lastTvName = it.name, lastTvUrl = it.url, lastTvLogo = it.logo ?: "", lastTvGroup = it.group) 
             }
