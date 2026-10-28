@@ -51,6 +51,7 @@ class SettingsStore(ctx: Context) {
             showFavRow = b("showFavRow", d.showFavRow),
             showRecentRow = b("showRecentRow", d.showRecentRow),
             rowOrder = normalizeRows(list("rowOrder")),
+            tabOrder = list("tabOrder").mapNotNull { it.toIntOrNull() }.ifEmpty { DefaultTabOrder },
             posterSize = i("posterSize", d.posterSize),
             posterDesc = b("posterDesc", d.posterDesc),
             posterBadge = b("posterBadge", d.posterBadge),
@@ -75,7 +76,6 @@ class SettingsStore(ctx: Context) {
             lat = sp.getString("lat", null)?.toDoubleOrNull() ?: d.lat,
             lon = sp.getString("lon", null)?.toDoubleOrNull() ?: d.lon,
             fahrenheit = b("fahrenheit", d.fahrenheit),
-            tvPkg = sp.getString("tvPkg", null),
             hidden = HashSet(sp.getStringSet("hidden", emptySet()) ?: emptySet()),
             favorites = HashSet(sp.getStringSet("favorites", emptySet()) ?: emptySet()),
             recents = list("recents"),
@@ -83,7 +83,11 @@ class SettingsStore(ctx: Context) {
             homeConfigured = b("homeConfigured", d.homeConfigured),
             homeApps = list("homeApps"),
             tvScale = i("tvScale", d.tvScale),
-            tvWhiteLogoBg = b("tvWhiteLogoBg", d.tvWhiteLogoBg)
+            tvWhiteLogoBg = b("tvWhiteLogoBg", d.tvWhiteLogoBg),
+            lastTvName = t("lastTvName", d.lastTvName),
+            lastTvLogo = t("lastTvLogo", d.lastTvLogo),
+            lastTvUrl = t("lastTvUrl", d.lastTvUrl),
+            lastTvGroup = t("lastTvGroup", d.lastTvGroup)
         )
     }
 
@@ -118,6 +122,7 @@ class SettingsStore(ctx: Context) {
         e.putBoolean("showFavRow", s.showFavRow)
         e.putBoolean("showRecentRow", s.showRecentRow)
         e.putString("rowOrder", s.rowOrder.joinToString(","))
+        e.putString("tabOrder", s.tabOrder.joinToString(","))
         e.putInt("posterSize", s.posterSize)
         e.putBoolean("posterDesc", s.posterDesc)
         e.putBoolean("posterBadge", s.posterBadge)
@@ -142,7 +147,6 @@ class SettingsStore(ctx: Context) {
         e.putString("lat", s.lat.toString())
         e.putString("lon", s.lon.toString())
         e.putBoolean("fahrenheit", s.fahrenheit)
-        e.putString("tvPkg", s.tvPkg)
         e.putStringSet("hidden", HashSet(s.hidden))
         e.putStringSet("favorites", HashSet(s.favorites))
         e.putString("recents", s.recents.joinToString(","))
@@ -151,6 +155,10 @@ class SettingsStore(ctx: Context) {
         e.putString("homeApps", s.homeApps.joinToString(","))
         e.putInt("tvScale", s.tvScale)
         e.putBoolean("tvWhiteLogoBg", s.tvWhiteLogoBg)
+        e.putString("lastTvName", s.lastTvName)
+        e.putString("lastTvLogo", s.lastTvLogo)
+        e.putString("lastTvUrl", s.lastTvUrl)
+        e.putString("lastTvGroup", s.lastTvGroup)
         e.apply()
     }
 }
